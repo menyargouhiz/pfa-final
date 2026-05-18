@@ -1,6 +1,6 @@
 <?php
 include("../config/database.php");
-include("../model/User.php");
+include("../model/user.php");
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

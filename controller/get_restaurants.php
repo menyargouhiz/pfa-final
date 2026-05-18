@@ -35,6 +35,8 @@ try {
         if ($rev['ambiance'] && $rev['cleanliness'] && $rev['quality'] && $rev['service']) {
             $rev['rating'] = (int) round(($rev['ambiance'] + $rev['cleanliness'] + $rev['quality'] + $rev['service']) / 4);
         }
+        $rev['facture_verified'] = !empty($rev['facture_code']);
+        unset($rev['facture_code']);
         $rev['comments'] = isset($groupedComments[$rev['id']]) ? $groupedComments[$rev['id']] : [];
         $groupedReviews[$rev['restaurant_id']][] = $rev;
     }

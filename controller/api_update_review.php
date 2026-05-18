@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../model/Review.php';
+require_once __DIR__ . '/../model/review.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

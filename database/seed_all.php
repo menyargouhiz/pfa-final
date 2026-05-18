@@ -74,6 +74,8 @@ try {
         [ 'name'=>"Kebili Desert Camp", 'cuisine'=>"African", 'category'=>"africaine", 'address'=>"Douz Desert", 'city'=>"Kebili", 'phone'=>"+216 75 490 888", 'priceRange'=>"€€€", 'lat'=>33.7050, 'lng'=>8.9650, 'tags'=>"Sand,Campfire,Under Stars", 'image'=>"https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&q=80", 'description'=>"Dine beneath the stars in the Sahara. Bread baked in the sand and slow-roasted meats at a luxury camp.", 'openHours'=>"Daily : 6PM–11PM" ]
     ];
 
+    $restaurants = array_merge($restaurants, require __DIR__ . '/extra_restaurants.php');
+
     $stmtResto = $cnx->prepare("INSERT INTO restaurants (name, cuisine, category, address, city, phone, priceRange, lat, lng, tags, image, description, openHours) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $restoIds = [];
     foreach ($restaurants as $r) {
@@ -89,7 +91,7 @@ try {
         3 => ["Decent, but not great.", "Average experience.", "Service was a bit slow.", "Standard quality.", "Alright for the price."]
     ];
 
-    $stmtReview = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, date) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmtReview = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, facture_code, date) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $reviewIds = [];
 
     foreach ($restoIds as $rid) {
@@ -104,7 +106,7 @@ try {
             $text = $reviewTexts[$rating][array_rand($reviewTexts[$rating])];
             $date = date('Y-m-d', strtotime('-' . rand(1, 100) . ' days'));
 
-            $stmtReview->execute([$rid, $user['id'], $user['name'], $rating, $text, $date]);
+            $stmtReview->execute([$rid, $user['id'], $user['name'], $rating, $text, 'SEED-' . $rid . '-' . $user['id'], $date]);
             $reviewIds[] = [
                 'id' => $cnx->lastInsertId(),
                 'restaurant_id' => $rid

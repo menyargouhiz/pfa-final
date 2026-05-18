@@ -38,6 +38,26 @@ function avgRating(r) {
   return r.reviews.reduce((a, rv) => a + getReviewAverage(rv), 0) / r.reviews.length;
 }
 
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function buildRestaurantSearchText(r) {
+  return normalizeSearchText([
+    r.name,
+    r.cuisine,
+    r.category,
+    r.city,
+    r.region,
+    r.address,
+    r.description,
+    Array.isArray(r.tags) ? r.tags.join(' ') : r.tags
+  ].filter(Boolean).join(' '));
+}
+
 // ===== STATE =====
 const state = {
   restaurants: [],
@@ -81,7 +101,10 @@ async function loadRestaurants() {
       const myReviews = state.userReviews.filter(ur => ur.restaurantId === r.id);
       const allReviews = [...myReviews, ...(r.reviews || [])];
       return { ...r, reviews: allReviews, score: 0, avg: 0 };
-    }).map(r => ({ ...r, score: calcScore(r), avg: avgRating(r) }));
+    }).map(r => {
+      const enriched = { ...r, score: calcScore(r), avg: avgRating(r) };
+      return { ...enriched, searchText: buildRestaurantSearchText(enriched) };
+    });
 
     if (typeof window.initExplore === 'function') window.initExplore();
     else if (typeof renderGrid === 'function') renderGrid();
@@ -291,6 +314,7 @@ function openCasserole(id) {
           <div class="review-text">${rv.text}</div>
           <div class="review-detail" style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
             Ambiance ${rv.ambiance || rv.rating} · Cleanliness ${rv.cleanliness || rv.rating} · Quality ${rv.quality || rv.rating} · Service ${rv.service || rv.rating}
+            ${rv.facture_verified ? ' · Facture verified' : ''}
           </div>
         </div>`).join('')}
       </div>
@@ -322,6 +346,10 @@ function openCasserole(id) {
         <div class="form-group">
           <label class="form-label">Overall</label>
           <div id="review-rating-summary" style="font-weight:600;color:var(--text-secondary);">Choose your scores above.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Facture code</label>
+          <input class="form-input" id="rv-facture-code" placeholder="Code on your receipt..." maxlength="100" autocomplete="off" />
         </div>
         <div class="form-group">
           <label class="form-label">Comment</label>
@@ -376,10 +404,12 @@ function setRating(category, v) {
 
 async function submitReview(restaurantId) {
   const author = document.getElementById('rv-author')?.value.trim();
+  const factureCode = document.getElementById('rv-facture-code')?.value.trim();
   const text   = document.getElementById('rv-text')?.value.trim();
   const ratings = state.pendingRatings;
   const missing = Object.entries(ratings).filter(([_, value]) => value === 0);
   if (!author) { toast('⚠️ Enter your name.', 'error'); return; }
+  if (!factureCode || factureCode.length < 4) { toast('⚠️ Enter the facture code from your receipt.', 'error'); return; }
   if (missing.length) { toast('⚠️ Choose a rating for ambiance, cleanliness, quality and service.', 'error'); return; }
   if (text.length < 20) { toast('⚠️ Comment too short (min. 20 characters).', 'error'); return; }
 
@@ -396,6 +426,7 @@ async function submitReview(restaurantId) {
         cleanliness: ratings.cleanliness,
         quality: ratings.quality,
         service: ratings.service,
+        facture_code: factureCode,
         text: text
       })
     });
@@ -420,6 +451,7 @@ async function submitReview(restaurantId) {
     cleanliness: ratings.cleanliness,
     quality: ratings.quality,
     service: ratings.service,
+    facture_verified: true,
     text,
     date: new Date().toISOString().split('T')[0]
   };

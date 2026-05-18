@@ -14,6 +14,7 @@
     <li><a href="index.php">Home</a></li>
     <li><a href="explore.php" class="active">Explore</a></li>
     <li><a href="rankings.php">Top 10</a></li>
+    <li><a href="user-search.php">Reviewers</a></li>
   </ul>
   <div class="nav-actions" id="nav-actions"></div>
 </nav>
@@ -23,11 +24,14 @@
   <div class="container">
     <div class="page-hero-title">🔍 Explore Restaurants</div>
     <div class="page-hero-sub" style="margin-bottom:1.5rem;">Filter, sort and find your next table.</div>
-    <div class="search-bar" style="max-width:580px;">
+    <div class="search-bar" style="max-width:640px;">
       <input class="search-input" id="search-q" placeholder="Restaurant, cuisine, dish..." autocomplete="off" />
       <div class="search-divider"></div>
       <input class="search-input" id="search-city" placeholder="City..." autocomplete="off" style="max-width:160px;" />
-      <button class="btn btn-primary" id="search-btn" style="border-radius:50px;">Search</button>
+      <button class="btn btn-primary" id="search-btn" type="button" style="border-radius:50px;">Search</button>
+    </div>
+    <div style="margin-top:1rem;">
+      <a href="user-search.php" class="btn btn-outline">Search reviewers</a>
     </div>
   </div>
 </div>
@@ -132,7 +136,7 @@
   <div class="footer-logo">🍽️ Appetitus</div>
   <div class="footer-tagline">The community for food lovers</div>
   <div class="footer-links">
-    <a href="index.php">Home</a><a href="explore.php">Explore</a>
+    <a href="index.php">Home</a><a href="explore.php">Explore</a><a href="user-search.php">Reviewers</a>
     <a href="favorites.php">Favorites</a><a href="wishlist.php">Wishlist</a>
     <a href="login.php">Log In</a><a href="signup.php">Sign Up</a>
   </div>
@@ -180,12 +184,12 @@ function getFiltered() {
   if (filters.minRating > 0)      list = list.filter(r => r.avg >= filters.minRating);
   if (filters.city !== 'all')     list = list.filter(r => r.region === filters.city);
   if (filters.query) {
-    const q = filters.query.toLowerCase();
-    list = list.filter(r => r.name.toLowerCase().includes(q) || r.cuisine.toLowerCase().includes(q) || r.tags.some(t => t.toLowerCase().includes(q)));
+    const terms = normalizeSearchText(filters.query).split(/\s+/).filter(Boolean);
+    list = list.filter(r => terms.every(term => (r.searchText || '').includes(term)));
   }
   if (filters.queryCity) {
-    const c = filters.queryCity.toLowerCase();
-    list = list.filter(r => r.city.toLowerCase().includes(c));
+    const c = normalizeSearchText(filters.queryCity);
+    list = list.filter(r => normalizeSearchText(r.city).includes(c) || normalizeSearchText(r.region).includes(c));
   }
   const sort = document.getElementById('sort-select')?.value || 'score';
   switch(sort) {
@@ -193,8 +197,8 @@ function getFiltered() {
     case 'rating':     list.sort((a,b) => b.avg - a.avg); break;
     case 'reviews':    list.sort((a,b) => b.reviews.length - a.reviews.length); break;
     case 'name':       list.sort((a,b) => a.name.localeCompare(b.name)); break;
-    case 'price-asc':  list.sort((a,b) => a.priceRange.length - b.priceRange.length); break;
-    case 'price-desc': list.sort((a,b) => b.priceRange.length - a.priceRange.length); break;
+    case 'price-asc':  list.sort((a,b) => String(a.priceRange || '').length - String(b.priceRange || '').length); break;
+    case 'price-desc': list.sort((a,b) => String(b.priceRange || '').length - String(a.priceRange || '').length); break;
   }
   return list;
 }
@@ -213,7 +217,7 @@ function renderGrid() {
     return;
   }
   grid.innerHTML = list.map((r, i) => `
-    <div class="restaurant-card reveal" data-category="${r.category}" onclick="openCasserole(${r.id})">
+    <div class="restaurant-card reveal" data-category="${r.category}" style="--reveal-delay:${Math.min(i, 8) * 45}ms" onclick="openCasserole(${r.id})">
       <div class="card-img-wrap">
         <img src="${r.image}" alt="${r.name}" loading="lazy" />
         <div class="card-steam">
@@ -246,18 +250,39 @@ function renderGrid() {
   });
 }
 
-// Search button
-document.getElementById('search-btn').addEventListener('click', () => {
+function syncSearchUrl() {
+  const url = new URL(window.location.href);
+  if (filters.query) url.searchParams.set('q', filters.query);
+  else url.searchParams.delete('q');
+  if (filters.queryCity) url.searchParams.set('city', filters.queryCity);
+  else url.searchParams.delete('city');
+  history.replaceState(null, '', url);
+}
+
+function applySearch() {
   filters.query = document.getElementById('search-q').value.trim();
   filters.queryCity = document.getElementById('search-city').value.trim();
+  syncSearchUrl();
   renderGrid();
-});
-document.getElementById('search-q').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('search-btn').click(); });
-document.getElementById('search-city').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('search-btn').click(); });
+}
+
+// Search button and live input
+document.getElementById('search-btn').addEventListener('click', applySearch);
+document.getElementById('search-q').addEventListener('input', applySearch);
+document.getElementById('search-city').addEventListener('input', applySearch);
+document.getElementById('search-q').addEventListener('keydown', e => { if (e.key==='Enter') applySearch(); });
+document.getElementById('search-city').addEventListener('keydown', e => { if (e.key==='Enter') applySearch(); });
 
 // Handled by app.js async loader
 window.initExplore = function() {
   const params = new URLSearchParams(window.location.search);
+  const query = params.get('q') || '';
+  const city = params.get('city') || '';
+  filters.query = query;
+  filters.queryCity = city;
+  document.getElementById('search-q').value = query;
+  document.getElementById('search-city').value = city;
+
   const cat = params.get('cat');
   if (cat) {
     const el = document.querySelector(`[data-cat="${cat}"]`);

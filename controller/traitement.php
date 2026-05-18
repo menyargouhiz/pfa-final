@@ -1,6 +1,6 @@
 <?php
 include("../config/database.php");
-include("../model/User.php");
+include("../model/user.php");
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -36,7 +36,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'add') {
 // Get all users
 if (isset($_POST['action']) && $_POST['action'] === 'getAll') {
     try {
-        $users = User::readAll();
+        $stmt = $cnx->query("
+            SELECT u.id, u.nom, u.email, COUNT(r.id) AS review_count
+            FROM users u
+            LEFT JOIN reviews r ON r.user_id = u.id
+            GROUP BY u.id, u.nom, u.email
+            ORDER BY u.nom ASC
+        ");
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         http_response_code(200);
         echo json_encode(['success' => true, 'data' => $users]);
     } catch (Exception $e) {
@@ -46,18 +53,25 @@ if (isset($_POST['action']) && $_POST['action'] === 'getAll') {
     exit;
 }
 
-// Search users by name
+// Search users by name or email
 if (isset($_POST['action']) && $_POST['action'] === 'search') {
     if (!isset($_POST['name'])) {
         http_response_code(400);
-        die(json_encode(['success' => false, 'error' => 'Name parameter required']));
+        die(json_encode(['success' => false, 'error' => 'Search parameter required']));
     }
 
     try {
-        $stmt = $cnx->prepare("SELECT * FROM users WHERE nom LIKE ?");
-        $stmt->execute(['%' . $_POST['name'] . '%']);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, 'User');
-        $users = $stmt->fetchAll();
+        $search = '%' . trim($_POST['name']) . '%';
+        $stmt = $cnx->prepare("
+            SELECT u.id, u.nom, u.email, COUNT(r.id) AS review_count
+            FROM users u
+            LEFT JOIN reviews r ON r.user_id = u.id
+            WHERE u.nom LIKE ? OR u.email LIKE ?
+            GROUP BY u.id, u.nom, u.email
+            ORDER BY u.nom ASC
+        ");
+        $stmt->execute([$search, $search]);
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         http_response_code(200);
         echo json_encode(['success' => true, 'data' => $users]);

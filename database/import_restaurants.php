@@ -28,6 +28,8 @@ $restaurants = [
   [ 'name'=>"Kebili Desert Camp", 'cuisine'=>"African", 'category'=>"africaine", 'address'=>"Douz Desert", 'city'=>"Kebili", 'phone'=>"+216 75 490 888", 'priceRange'=>"€€€", 'lat'=>33.7050, 'lng'=>8.9650, 'tags'=>"Sand,Campfire,Under Stars", 'image'=>"https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&q=80", 'description'=>"Dine beneath the stars in the Sahara. Bread baked in the sand and slow-roasted meats at a luxury camp.", 'openHours'=>"Daily : 6PM–11PM" ]
 ];
 
+$restaurants = array_merge($restaurants, require __DIR__ . '/extra_restaurants.php');
+
 try {
     $cnx->exec("CREATE TABLE IF NOT EXISTS restaurants (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,6 +60,8 @@ try {
         service INT NOT NULL DEFAULT 0,
         date DATE NOT NULL,
         text TEXT,
+        facture_code VARCHAR(100) DEFAULT NULL,
+        INDEX idx_reviews_facture_code (facture_code),
         FOREIGN KEY(restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
     )");
 

@@ -41,6 +41,8 @@
   --radius-xl: 32px;
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.2, 1.08);
 }
 
 /* Category CSS custom props — applied via data-category */
@@ -271,8 +273,13 @@ body.dark #navbar {
   font-weight: 600;
   font-size: 0.875rem;
   border: none;
-  transition: var(--transition);
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
   cursor: pointer;
+  will-change: transform;
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.97);
 }
 
 .theme-toggle {
@@ -1110,13 +1117,16 @@ body.dark #navbar {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--bounce);
+  transition: transform 0.38s var(--ease-spring), box-shadow 0.38s var(--ease-out), border-color 0.28s ease;
   position: relative;
   border-top: 4px solid var(--cat, var(--accent));
+  will-change: transform;
+  animation: card-rise 0.55s var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 
 .restaurant-card:hover {
-  transform: translateY(-6px) scale(1.015);
+  transform: translateY(-8px) scale(1.018);
   box-shadow: 0 20px 40px var(--cat-bg, rgba(232, 132, 90, 0.2)), 0 8px 16px rgba(0, 0, 0, 0.06);
   border-color: var(--cat, var(--accent));
 }
@@ -1131,11 +1141,26 @@ body.dark #navbar {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.75s var(--ease-out), filter 0.45s ease;
 }
 
 .restaurant-card:hover .card-img-wrap img {
-  transform: scale(1.06);
+  transform: scale(1.08);
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.restaurant-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.18) 42%, transparent 58%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease-out);
+}
+
+.restaurant-card:hover::after {
+  transform: translateX(120%);
 }
 
 /* Steam on card image (shown on hover) */
@@ -1147,12 +1172,13 @@ body.dark #navbar {
   display: flex;
   gap: 6px;
   pointer-events: none;
-  opacity: 0.6;
-  transition: opacity 0.3s;
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s var(--ease-out);
 }
 
 .restaurant-card:hover .card-steam {
   opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
 }
 
 .card-rank {
@@ -1194,7 +1220,7 @@ body.dark #navbar {
   transition: all 0.3s ease;
 }
 
-.restaurant-card:hover .casserole-hint { animation: pot-bubble 2s ease-in-out infinite;
+.restaurant-card:hover .casserole-hint { animation: pot-bubble 1.7s ease-in-out infinite;
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -1285,6 +1311,18 @@ body.dark #navbar {
   font-weight: 800;
 }
 
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .card-price {
   font-weight: 700;
   font-size: 0.88rem;
@@ -1306,13 +1344,16 @@ body.dark #navbar {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--bounce);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-out), border-color 0.25s ease;
   border-left: 4px solid var(--cat, var(--accent));
+  animation: card-rise 0.58s var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 
 .top-pick:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--cat, var(--accent));
 }
 
 .top-pick-img {
@@ -1343,6 +1384,12 @@ body.dark #navbar {
 .top-pick-medal {
   font-size: 1.6rem;
   margin-bottom: 0.35rem;
+  display: inline-block;
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.top-pick:hover .top-pick-medal {
+  transform: translateY(-2px) rotate(-8deg) scale(1.08);
 }
 
 .top-pick-name {
@@ -1363,7 +1410,19 @@ body.dark #navbar {
   height: 100%;
   background: linear-gradient(90deg, var(--cat, var(--accent)), color-mix(in srgb, var(--cat, var(--accent)) 70%, white));
   border-radius: 3px;
+  transform-origin: left center;
+  animation: score-fill 0.9s var(--ease-out) both;
   transition: width 1.2s ease;
+}
+
+@keyframes score-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .score-label {
@@ -1380,7 +1439,7 @@ body.dark #navbar {
   z-index: 5000;
   pointer-events: none;
   opacity: 0.4;
-  transition: opacity 0.4s ease, background 0.4s ease;
+  transition: opacity 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease;
   background: rgba(0, 0, 0, 0);
 }
 
@@ -1412,7 +1471,7 @@ body.dark #navbar {
   width: 260px;
   transform: scale(0) translateY(60px);
   opacity: 0.4;
-  transition: transform 0.95s cubic-bezier(0.25, 0.8, 0.25, 1) 0.1s,
+  transition: transform 0.95s var(--ease-spring) 0.1s,
     opacity 0.65s ease 0.1s;
   filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.45));
 }
@@ -1420,6 +1479,7 @@ body.dark #navbar {
 #casserole-overlay.open .big-pot-wrap {
   transform: scale(1) translateY(0);
   opacity: 1;
+  animation: pot-arrive 0.85s var(--ease-spring) 0.05s both;
 }
 
 #casserole-overlay.show-content .big-pot-wrap {
@@ -1571,7 +1631,7 @@ body.dark #navbar {
   justify-content: center;
   z-index: 5001;
   transform: translateY(110%);
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.7s var(--ease-out);
 }
 
 #casserole-overlay.show-content #casserole-panel {
@@ -1587,6 +1647,36 @@ body.dark #navbar {
   overflow-y: auto;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: 0 -12px 60px rgba(0, 0, 0, 0.2);
+}
+
+#casserole-overlay.show-content .casserole-panel-inner {
+  animation: panel-breathe 0.7s var(--ease-out) both;
+}
+
+@keyframes pot-arrive {
+  0% {
+    transform: scale(0.72) translateY(60px);
+  }
+
+  70% {
+    transform: scale(1.04) translateY(-4px);
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes panel-breathe {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .casserole-close {
@@ -1850,6 +1940,25 @@ body.dark .casserole-close {
   appearance: none;
 }
 
+/* Dark mode: make inputs dark/black for better contrast */
+body.dark .form-input,
+body.dark .form-textarea,
+body.dark .form-select,
+body.dark input.form-input,
+body.dark textarea.form-textarea,
+body.dark select.form-select {
+  background: #000;
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.06);
+}
+
+body.dark .form-input:focus,
+body.dark .form-textarea:focus,
+body.dark .form-select:focus {
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.08), 0 4px 12px rgba(0,0,0,0.6);
+  border-color: var(--accent);
+}
+
 .form-textarea {
   resize: vertical;
   min-height: 85px;
@@ -2012,6 +2121,216 @@ body.dark .casserole-close {
   font-size: 0.83rem;
 }
 
+/* ===== USER SEARCH PAGE ===== */
+.user-search-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  align-items: center;
+  gap: 2rem;
+}
+
+.user-search-bar {
+  display: flex;
+  gap: 0.6rem;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 0.42rem;
+  box-shadow: var(--shadow-md);
+}
+
+.user-search-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.user-results-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.user-result-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  animation: card-rise 0.55s var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
+  transition: transform 0.28s var(--ease-spring), border-color 0.24s ease, box-shadow 0.28s var(--ease-out), background 0.24s ease;
+}
+
+.user-result-card:hover,
+.user-result-card.active {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: var(--shadow-md);
+}
+
+.user-avatar,
+.empty-user-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #FF8A65);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(232, 132, 90, 0.24);
+}
+
+.user-avatar.large {
+  width: 62px;
+  height: 62px;
+  font-size: 1.25rem;
+}
+
+.user-card-main {
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.user-card-main strong {
+  font-size: 0.98rem;
+}
+
+.user-card-main span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-review-count {
+  background: var(--bg-surface);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.user-review-panel {
+  position: sticky;
+  top: 86px;
+  min-height: 360px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  box-shadow: var(--shadow-md);
+}
+
+.empty-user-panel,
+.user-empty-state,
+.user-loading {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.7rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-user-panel h2 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.empty-user-panel p,
+.user-empty-state {
+  font-size: 0.88rem;
+}
+
+.user-panel-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-panel-header h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.user-panel-header p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.user-panel-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.user-panel-stats div {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.user-panel-stats strong,
+.user-panel-stats span {
+  display: block;
+}
+
+.user-panel-stats strong {
+  color: var(--accent);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.user-panel-stats span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  margin-top: 0.25rem;
+}
+
+.user-review-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.user-review-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: var(--bg-surface);
+}
+
+.user-review-item h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.user-review-item p {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  margin: 0.75rem 0;
+}
+
 /* ===== AUTH PAGES ===== */
 .auth-page {
   min-height: 100vh;
@@ -2040,6 +2359,7 @@ body.dark .casserole-close {
 
 .auth-card {
   background: var(--bg-card);
+  color: var(--text-primary);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 2.5rem;
@@ -2050,7 +2370,6 @@ body.dark .casserole-close {
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
 }
 
 .auth-card::before {
@@ -2357,9 +2676,9 @@ body.dark .casserole-close {
   font-size: 0.875rem;
   font-weight: 500;
   z-index: 9999;
-  transform: translateY(20px);
-  opacity: 0.4;
-  transition: all 0.35s ease;
+  transform: translateY(18px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.36s var(--ease-spring), opacity 0.28s ease;
   max-width: 300px;
   display: flex;
   align-items: center;
@@ -2369,6 +2688,21 @@ body.dark .casserole-close {
 #toast.show {
   transform: translateY(0) scale(1);
   opacity: 1;
+  animation: toast-pop 0.42s var(--ease-spring);
+}
+
+@keyframes toast-pop {
+  0% {
+    transform: translateY(18px) scale(0.96);
+  }
+
+  65% {
+    transform: translateY(-3px) scale(1.015);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 #toast.success {
@@ -2381,9 +2715,10 @@ body.dark .casserole-close {
 
 /* ===== REVEAL ANIMATION ===== */
 .reveal {
-  opacity: 0.4;
-  transform: translateY(28px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.62s ease, transform 0.62s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 .reveal.visible {
@@ -2712,9 +3047,11 @@ footer {
   border-radius: var(--radius-lg);
   padding: 1.5rem 1rem;
   text-align: center;
-  transition: var(--bounce);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-out), border-color 0.25s ease, opacity 0.25s ease, filter 0.25s ease;
   opacity: 0.6;
   filter: grayscale(1);
+  animation: card-rise 0.55s var(--ease-out) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 
 .badge-card.earned {
@@ -2768,6 +3105,25 @@ footer {
   box-shadow: var(--shadow-md);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .restaurant-card,
+  .top-pick,
+  .badge-card,
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 .my-review-thumb {
   width: 80px;
   height: 80px;
@@ -2807,6 +3163,15 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .user-search-hero,
+  .user-search-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .user-review-panel {
+    position: static;
+  }
+
   .filter-sidebar {
     position: static;
   }
@@ -2836,6 +3201,26 @@ footer {
 }
 
 @media (max-width: 480px) {
+  .user-search-bar,
+  .search-bar {
+    border-radius: var(--radius-md);
+    flex-direction: column;
+  }
+
+  .user-search-bar .btn,
+  .search-bar .btn {
+    width: 100%;
+  }
+
+  .user-result-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .user-review-count {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
   .restaurant-grid {
     grid-template-columns: 1fr;
   }
@@ -2869,6 +3254,4 @@ footer {
   .wishlist-actions .btn {
     flex: 1;
   }
-}@ k e y f r a m e s   p o t - b u b b l e   {   0 % ,   1 0 0 %   {   t r a n s f o r m :   t r a n s l a t e Y ( 0 )   s c a l e ( 1 )   r o t a t e ( 0 d e g ) ;   }   2 5 %   {   t r a n s f o r m :   t r a n s l a t e Y ( - 2 p x )   s c a l e ( 1 . 0 5 )   r o t a t e ( 2 d e g ) ;   }   5 0 %   {   t r a n s f o r m :   t r a n s l a t e Y ( 0 )   s c a l e ( 1 . 1 )   r o t a t e ( 0 d e g ) ;   }   7 5 %   {   t r a n s f o r m :   t r a n s l a t e Y ( - 1 p x )   s c a l e ( 1 . 0 5 )   r o t a t e ( - 2 d e g ) ;   }   } 
- 
- 
+}

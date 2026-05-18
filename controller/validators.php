@@ -122,6 +122,31 @@ function validateReviewText($text) {
 }
 
 /**
+ * Validate facture/receipt code used to verify a real visit.
+ */
+function validateFactureCode($code) {
+    $code = trim($code);
+
+    if (empty($code)) {
+        return ['valid' => false, 'error' => 'Facture code is required'];
+    }
+
+    if (strlen($code) < 4) {
+        return ['valid' => false, 'error' => 'Facture code must be at least 4 characters'];
+    }
+
+    if (strlen($code) > 100) {
+        return ['valid' => false, 'error' => 'Facture code is too long (max 100 characters)'];
+    }
+
+    if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9 .:_\/-]*$/', $code)) {
+        return ['valid' => false, 'error' => 'Facture code contains invalid characters'];
+    }
+
+    return ['valid' => true];
+}
+
+/**
  * Sanitize string input
  */
 function sanitizeString($str) {

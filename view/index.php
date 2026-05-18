@@ -15,6 +15,7 @@
     <li><a href="index.php" class="active">Home</a></li>
     <li><a href="explore.php">Explore</a></li>
     <li><a href="rankings.php">Top 10</a></li>
+    <li><a href="user-search.php">Reviewers</a></li>
   </ul>
   <div class="nav-actions" id="nav-actions"></div>
 </nav>
@@ -52,8 +53,8 @@
       <a href="signup.php" class="btn btn-ghost btn-lg">Join Appetitus</a>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="num" data-count="50" data-suffix="+">0</div><div class="lbl">Restaurants</div></div>
-      <div class="hero-stat"><div class="num" data-count="120" data-suffix="+">0</div><div class="lbl">Verified Reviews</div></div>
+      <div class="hero-stat"><div class="num" data-count="36" data-suffix="+">0</div><div class="lbl">Restaurants</div></div>
+      <div class="hero-stat"><div class="num" data-count="125" data-suffix="+">0</div><div class="lbl">Verified Reviews</div></div>
       <div class="hero-stat"><div class="num" data-count="24" data-suffix="">0</div><div class="lbl">Regions</div></div>
     </div>
   </div>
@@ -125,6 +126,7 @@
   <div class="footer-links">
     <a href="index.php">Home</a>
     <a href="explore.php">Explore</a>
+    <a href="user-search.php">Reviewers</a>
     <a href="favorites.php">Favorites</a>
     <a href="wishlist.php">Wishlist</a>
     <a href="login.php">Log In</a>
@@ -139,7 +141,7 @@ function renderTopPicks() {
   const top = [...state.restaurants].sort((a,b) => b.score - a.score).slice(0, 4);
   const medals = ['🥇','🥈','🥉','🏅'];
   document.getElementById('top-picks').innerHTML = top.map((r,i) => `
-    <div class="top-pick" data-category="${r.category}" onclick="openCasserole(${r.id})">
+    <div class="top-pick" data-category="${r.category}" style="--reveal-delay:${i * 80}ms" onclick="openCasserole(${r.id})">
       <div class="top-pick-img"><img src="${r.image}" alt="${r.name}" loading="lazy" /></div>
       <div class="top-pick-body">
         <div class="top-pick-medal">${medals[i]}</div>
@@ -160,10 +162,10 @@ function renderTopPicks() {
 
 function renderBadgesShowcase() {
   const userCount = (state.userReviews || []).length;
-  document.getElementById('badges-showcase').innerHTML = BADGES.map(b => {
+  document.getElementById('badges-showcase').innerHTML = BADGES.map((b, i) => {
     const earned = userCount >= b.min && (b.max === Infinity || userCount <= b.max) || (b.id === 'nouveau' && userCount === 0);
     return `
-    <div class="badge-card ${earned ? 'earned' : 'locked'}">
+    <div class="badge-card ${earned ? 'earned' : 'locked'}" style="--reveal-delay:${i * 55}ms">
       <div class="bicon">${b.icon}</div>
       <div class="bname">${b.name}</div>
       <div class="bdesc">${b.desc}</div>

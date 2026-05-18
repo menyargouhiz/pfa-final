@@ -219,6 +219,16 @@ function renderRatingForm(restaurant, user) {
         </div>
 
         <div class="form-group">
+          <label class="form-label">Facture code</label>
+          <input class="form-input" id="facture-code" placeholder="Code on your receipt..." maxlength="100" autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Review</label>
+          <textarea class="form-textarea" id="review-text" placeholder="Share your experience..." maxlength="1000"></textarea>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Photos (Optional)</label>
           <div class="photo-upload">
             <input type="file" id="photo-input" accept="image/*" multiple style="display:none;" />
@@ -251,7 +261,6 @@ function setRating(category, rating) {
   currentRatings[category] = rating;
   const stars = document.querySelectorAll(`.rating-controls[data-category="${category}"] .star`);
   const ratingText = document.getElementById('rating-text');
-  const submitBtn = document.getElementById('submit-btn');
 
   stars.forEach((star, index) => {
     if (index < rating) {
@@ -270,13 +279,29 @@ function setRating(category, rating) {
     ratingText.textContent = 'Rate all four categories';
   }
 
-  submitBtn.disabled = !complete;
+  updateSubmitState();
+}
+
+function updateSubmitState() {
+  const submitBtn = document.getElementById('submit-btn');
+  if (!submitBtn) return;
+
+  const ratingsComplete = Object.values(currentRatings).every(value => value > 0);
+  const reviewText = document.getElementById('review-text')?.value.trim() || '';
+  const factureCode = document.getElementById('facture-code')?.value.trim() || '';
+  submitBtn.disabled = !(ratingsComplete && reviewText.length >= 5 && factureCode.length >= 4);
 }
 
 // Photo upload functionality
 document.addEventListener('change', (e) => {
   if (e.target.id === 'photo-input') {
     handlePhotoSelection(e.target.files);
+  }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'review-text' || e.target.id === 'facture-code') {
+    updateSubmitState();
   }
 });
 
@@ -340,22 +365,52 @@ document.addEventListener('submit', (e) => {
   }
 });
 
-function submitReview() {
+async function submitReview() {
   const user = getCurrentUser();
   const reviewText = document.getElementById('review-text').value.trim();
+  const factureCode = document.getElementById('facture-code').value.trim();
   const ratings = currentRatings;
   const missing = Object.values(ratings).some(value => value === 0);
 
-  if (!selectedRestaurant || missing || !reviewText) {
+  if (!selectedRestaurant || missing || !reviewText || factureCode.length < 4) {
     toast('Please fill in all fields', 'error');
     return;
   }
 
   const overallRating = Math.round((ratings.ambiance + ratings.cleanliness + ratings.quality + ratings.service) / 4);
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
 
-  // Create new review
+  try {
+    const res = await fetch('../controller/api_create_review.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        restaurant_id: selectedRestaurant.id,
+        author: user.name,
+        rating: overallRating,
+        ambiance: ratings.ambiance,
+        cleanliness: ratings.cleanliness,
+        quality: ratings.quality,
+        service: ratings.service,
+        facture_code: factureCode,
+        text: reviewText
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to submit review');
+    }
+  } catch (err) {
+    submitBtn.disabled = false;
+    toast(err.message, 'error');
+    return;
+  }
+
+  const existingIds = window.state.userReviews.map(r => Number(r.id) || 0);
   const newReview = {
-    id: Math.max(...window.state.userReviews.map(r => r.id)) + 1,
+    id: (existingIds.length ? Math.max(...existingIds) : 0) + 1,
     restaurantId: selectedRestaurant.id,
     userId: user.id,
     rating: overallRating,
@@ -363,9 +418,10 @@ function submitReview() {
     cleanliness: ratings.cleanliness,
     quality: ratings.quality,
     service: ratings.service,
+    facture_verified: true,
     text: reviewText,
     photos: selectedPhotos.map(photo => ({ name: photo.name, dataUrl: photo.dataUrl })),
-    date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    date: new Date().toISOString().split('T')[0]
   };
 
   // Add to reviews

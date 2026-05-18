@@ -45,7 +45,7 @@ try {
     // Clean existing reviews if needed?
     // $cnx->exec("TRUNCATE TABLE reviews");
 
-    $stmtInsert = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, date) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmtInsert = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, facture_code, date) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
     echo "Seeding reviews for " . count($restaurants) . " restaurants...\n";
 
@@ -74,6 +74,7 @@ try {
                 $reviewer['name'],
                 $rating,
                 $text,
+                'SEED-' . $r['id'] . '-' . $reviewer['id'],
                 $date
             ]);
             $count++;
