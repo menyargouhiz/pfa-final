@@ -1,0 +1,81 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS `database1`;
+USE `database1`;
+
+-- Create Users Table
+CREATE TABLE IF NOT EXISTS `users` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `nom` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL UNIQUE,
+    `password` VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create Restaurants Table
+CREATE TABLE IF NOT EXISTS `restaurants` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
+    `cuisine` VARCHAR(100),
+    `category` VARCHAR(100),
+    `address` TEXT,
+    `city` VARCHAR(100),
+    `phone` VARCHAR(50),
+    `priceRange` VARCHAR(10),
+    `lat` FLOAT,
+    `lng` FLOAT,
+    `tags` VARCHAR(255),
+    `image` VARCHAR(500),
+    `description` TEXT,
+    `openHours` VARCHAR(100)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create Reviews Table
+CREATE TABLE IF NOT EXISTS `reviews` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `restaurant_id` INT NOT NULL,
+    `user_id` INT,
+    `author` VARCHAR(255) NOT NULL,
+    `rating` INT NOT NULL,
+    `ambiance` INT NOT NULL DEFAULT 0,
+    `cleanliness` INT NOT NULL DEFAULT 0,
+    `quality` INT NOT NULL DEFAULT 0,
+    `service` INT NOT NULL DEFAULT 0,
+    `date` DATE NOT NULL,
+    `text` TEXT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(`restaurant_id`) REFERENCES `restaurants`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create Comments Table
+CREATE TABLE IF NOT EXISTS `comments` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `review_id` INT NOT NULL,
+    `user_id` INT,
+    `author` VARCHAR(255) NOT NULL,
+    `text` TEXT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(`review_id`) REFERENCES `reviews`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create Favorites Table
+CREATE TABLE IF NOT EXISTS `favorites` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `restaurant_id` INT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `unique_fav` (`user_id`, `restaurant_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create Wishlist Table
+CREATE TABLE IF NOT EXISTS `wishlist` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `restaurant_id` INT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `unique_wish` (`user_id`, `restaurant_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

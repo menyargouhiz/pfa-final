@@ -1,0 +1,13 @@
+# Environment / credentials — never commit these
+config/.env
+.env
+
+# Debug artifacts
+controller_output.json
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
