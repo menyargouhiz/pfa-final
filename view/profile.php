@@ -250,7 +250,7 @@ async function renderMyReviewsList() {
       if (!r) return '';
       return `
       <div class="my-review-item" style="position:relative;">
-        <img class="my-review-thumb" src="${r.image}" alt="${r.name}" />
+        <img class="my-review-thumb" ${restaurantImageAttrs(r)} />
         <div style="flex:1;">
           <div class="my-review-name">${r.name}</div>
           <div class="stars" style="margin:3px 0;">${typeof renderStars === 'function' ? renderStars(ur.rating) : '★'.repeat(ur.rating)}</div>

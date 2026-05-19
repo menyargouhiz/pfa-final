@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/restaurant_images.php';
 
 $restaurants = [
   [ 'name'=>"Dar El Jeld", 'cuisine'=>"Tunisian", 'category'=>"gastronomique", 'address'=>"5-10 Rue Dar El Jeld, Medina", 'city'=>"Tunis", 'phone'=>"+216 71 560 916", 'priceRange'=>"€€€", 'lat'=>36.7990, 'lng'=>10.1695, 'tags'=>"Palace,Medina,Refined", 'image'=>"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", 'description'=>"Housed in an 18th-century palace in the heart of the Medina, Dar El Jeld is the reference for fine dining in Tunis. Refined Tunisian cuisine in an exceptional setting.", 'openHours'=>"Mon-Sat : 12:30–3PM, 7:30–11PM" ],
@@ -27,6 +28,9 @@ $restaurants = [
   [ 'name'=>"Kasserine Peaks", 'cuisine'=>"Brasserie", 'category'=>"brasserie", 'address'=>"Chambi Mountain Route", 'city'=>"Kasserine", 'phone'=>"+216 77 400 222", 'priceRange'=>"€€", 'lat'=>35.1676, 'lng'=>8.8365, 'tags'=>"Trails,Grill,Nature", 'image'=>"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", 'description'=>"A great post-hike stop offering grilled meats and hearty soups near Mount Chambi.", 'openHours'=>"Tue-Sun : 10AM–7PM" ],
   [ 'name'=>"Kebili Desert Camp", 'cuisine'=>"African", 'category'=>"africaine", 'address'=>"Douz Desert", 'city'=>"Kebili", 'phone'=>"+216 75 490 888", 'priceRange'=>"€€€", 'lat'=>33.7050, 'lng'=>8.9650, 'tags'=>"Sand,Campfire,Under Stars", 'image'=>"https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&q=80", 'description'=>"Dine beneath the stars in the Sahara. Bread baked in the sand and slow-roasted meats at a luxury camp.", 'openHours'=>"Daily : 6PM–11PM" ]
 ];
+
+$restaurants = array_merge($restaurants, require __DIR__ . '/extra_restaurants.php');
+$restaurants = appetitus_assign_unique_restaurant_images($restaurants);
 
 try {
     $cnx->exec("CREATE TABLE IF NOT EXISTS restaurants (
@@ -58,6 +62,8 @@ try {
         service INT NOT NULL DEFAULT 0,
         date DATE NOT NULL,
         text TEXT,
+        facture_code VARCHAR(100) DEFAULT NULL,
+        INDEX idx_reviews_facture_code (facture_code),
         FOREIGN KEY(restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
     )");
 

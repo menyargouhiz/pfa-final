@@ -94,7 +94,7 @@ async function loadWishlist() {
     container.innerHTML = `<div class="wishlist-list">` + wishlist.map((w, i) => `
       <div class="wishlist-item reveal" data-category="${w.category}" style="animation-delay:${i * 0.04}s">
         <div class="wishlist-img-wrap" onclick="openCasserole(${w.restaurant_id})">
-          <img src="${w.image}" alt="${w.name}" loading="lazy" />
+          <img ${restaurantImageAttrs(w, 'loading="lazy"')} />
         </div>
         <div class="wishlist-info" onclick="openCasserole(${w.restaurant_id})">
           <div class="wishlist-name">${w.name}</div>

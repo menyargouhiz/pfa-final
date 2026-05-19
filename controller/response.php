@@ -4,6 +4,15 @@
  * Standardized Response Helpers
  */
 
+class ResponseException extends Error {
+    public $statusCode;
+    public function __construct($message, $statusCode) {
+        parent::__construct($message);
+        $this->statusCode = $statusCode;
+    }
+}
+
+
 /**
  * Send a success response
  */
@@ -18,6 +27,10 @@ function sendSuccess($data = null, $message = null, $statusCode = 200) {
     
     if ($data) {
         $response['data'] = $data;
+    }
+    
+    if (defined('PHPUNIT_RUNNING')) {
+        throw new ResponseException(json_encode($response), $statusCode);
     }
     
     echo json_encode($response);
@@ -37,6 +50,10 @@ function sendError($error, $statusCode = 400, $details = null) {
     
     if ($details) {
         $response['details'] = $details;
+    }
+    
+    if (defined('PHPUNIT_RUNNING')) {
+        throw new ResponseException(json_encode($response), $statusCode);
     }
     
     echo json_encode($response);
@@ -77,6 +94,11 @@ function setCorsHeaders() {
 function handleCorsPreFlight() {
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(200);
+        if (defined('PHPUNIT_RUNNING')) {
+            throw new ResponseException('CORS Preflight Success', 200);
+        }
         exit;
     }
 }
+
+

@@ -47,7 +47,7 @@ try {
     $cnx->exec("SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE reviews; SET FOREIGN_KEY_CHECKS = 1;");
 
     // 3. SEED COMMUNITY REVIEWS (user_id = NULL)
-    $stmtInsert = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, date) VALUES (?, NULL, ?, ?, ?, ?)");
+    $stmtInsert = $cnx->prepare("INSERT INTO reviews (restaurant_id, user_id, author, rating, text, facture_code, date) VALUES (?, NULL, ?, ?, ?, ?, ?)");
 
     echo "Seeding community reviews for " . count($restaurants) . " restaurants...\n";
 
@@ -65,6 +65,7 @@ try {
                 $reviewer['name'],
                 $rating,
                 $text,
+                'SEED-' . $r['id'] . '-' . $count,
                 $date
             ]);
             $count++;

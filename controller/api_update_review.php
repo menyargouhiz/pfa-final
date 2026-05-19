@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../model/Review.php';
+require_once __DIR__ . '/../model/review.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -9,13 +9,13 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit;
+    if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
+    if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -23,7 +23,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 if (!$data || !isset($data['review_id'], $data['rating'], $data['text'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Missing required fields']);
-    exit;
+    if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
 }
 
 try {
@@ -35,7 +35,7 @@ try {
     if ($rating < 1 || $rating > 5) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Rating must be between 1 and 5']);
-        exit;
+        if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
     }
 
     // Verify review exists
@@ -43,7 +43,7 @@ try {
     if (!$review) {
         http_response_code(404);
         echo json_encode(['success' => false, 'error' => 'Review not found']);
-        exit;
+        if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
     }
 
     // Update review
@@ -65,3 +65,7 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>
+
+
+
+

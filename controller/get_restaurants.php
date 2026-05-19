@@ -1,5 +1,6 @@
 <?php
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../database/restaurant_images.php';
 header('Content-Type: application/json');
 
 try {
@@ -8,6 +9,7 @@ try {
     // Fetch all restaurants
     $stmt = $cnx->query("SELECT * FROM restaurants");
     $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
 
     // Fetch all reviews
     $stmt2 = $cnx->query("SELECT * FROM reviews ORDER BY date DESC");
@@ -35,6 +37,8 @@ try {
         if ($rev['ambiance'] && $rev['cleanliness'] && $rev['quality'] && $rev['service']) {
             $rev['rating'] = (int) round(($rev['ambiance'] + $rev['cleanliness'] + $rev['quality'] + $rev['service']) / 4);
         }
+        $rev['facture_verified'] = !empty($rev['facture_code']);
+        unset($rev['facture_code']);
         $rev['comments'] = isset($groupedComments[$rev['id']]) ? $groupedComments[$rev['id']] : [];
         $groupedReviews[$rev['restaurant_id']][] = $rev;
     }
@@ -65,3 +69,7 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 ?>
+
+
+
+
