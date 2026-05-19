@@ -65,7 +65,10 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718

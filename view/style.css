@@ -2311,10 +2311,13 @@ body.dark .form-select:focus {
 .user-review-list {
   display: grid;
   gap: 0.85rem;
+<<<<<<< HEAD
   max-height: 350px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.5rem;
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 }
 
 .user-review-item {
@@ -2837,6 +2840,29 @@ footer {
   z-index: 10;
 }
 
+<<<<<<< HEAD
+=======
+/* Nav icon links (heart, bookmark in navbar) */
+.nav-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-decoration: none;
+}
+
+.nav-icon-link:hover {
+  transform: scale(1.12) translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(232, 132, 90, 0.2);
+}
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 
 /* ===== WISHLIST LIST LAYOUT ===== */
 .wishlist-list {

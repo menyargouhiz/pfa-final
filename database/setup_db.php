@@ -58,7 +58,11 @@ try {
         INDEX idx_restaurants_price (priceRange),
         INDEX idx_restaurants_name (name),
         INDEX idx_restaurants_city_category (city, category),
+<<<<<<< HEAD
         FULLTEXT INDEX ft_restaurants_search (name, cuisine, category, city, tags, description, address)
+=======
+        FULLTEXT INDEX ft_restaurants_search (name, cuisine, tags, description, address)
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
     )");
     
     // Reviews table

@@ -87,7 +87,11 @@ return [
         'lat' => 35.8920,
         'lng' => 10.5946,
         'tags' => 'Seafood,Harbor,Grill',
+<<<<<<< HEAD
         'image' => 'https://images.unsplash.com/photo-1515669097368-22e68427d265?w=800&q=80',
+=======
+        'image' => 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80',
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
         'description' => 'Fresh fish displays, grilled shellfish, and harbor-side service in Port El Kantaoui.',
         'openHours' => 'Daily : 12PM-11PM',
     ],

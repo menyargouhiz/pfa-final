@@ -45,6 +45,7 @@ function normalizeSearchText(value) {
     .toLowerCase();
 }
 
+<<<<<<< HEAD
 function tokenizeSearch(value) {
   return normalizeSearchText(value)
     .replace(/[^a-z0-9]+/g, ' ')
@@ -53,6 +54,8 @@ function tokenizeSearch(value) {
     .filter(term => !['the', 'and', 'for', 'with', 'near', 'best', 'restaurant', 'restaurants'].includes(term));
 }
 
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 function buildRestaurantSearchText(r) {
   return normalizeSearchText([
     r.name,
@@ -66,6 +69,7 @@ function buildRestaurantSearchText(r) {
   ].filter(Boolean).join(' '));
 }
 
+<<<<<<< HEAD
 function restaurantImageAttrs(r, attrs = '') {
   const src = r?.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80';
   const alt = `alt="${String(r?.name || 'Restaurant')} image"`;
@@ -259,6 +263,8 @@ function searchRestaurants(restaurants, query) {
   );
 }
 
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 // ===== STATE =====
 const state = {
   restaurants: [],
@@ -306,6 +312,7 @@ async function loadRestaurants() {
       return { ...r, reviews: allReviews, score: 0, avg: 0 };
     }).map(r => {
       const enriched = { ...r, score: calcScore(r), avg: avgRating(r) };
+<<<<<<< HEAD
       return {
         ...enriched,
         searchText: buildRestaurantSearchText(enriched),
@@ -313,6 +320,10 @@ async function loadRestaurants() {
       };
     });
     state.restaurantSearchGraph = buildRestaurantSearchGraph(state.restaurants);
+=======
+      return { ...enriched, searchText: buildRestaurantSearchText(enriched) };
+    });
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 
     let pageRenderHandled = false;
     if (typeof window.initExplore === 'function') {

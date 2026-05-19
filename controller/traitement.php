@@ -1,6 +1,11 @@
 <?php
+<<<<<<< HEAD
 include_once(__DIR__ . "/../config/database.php");
 include_once(__DIR__ . "/../model/user.php");
+=======
+include("../config/database.php");
+include("../model/user.php");
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -57,7 +62,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'getAll') {
 if (isset($_POST['action']) && $_POST['action'] === 'search') {
     if (!isset($_POST['name'])) {
         http_response_code(400);
+<<<<<<< HEAD
         if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('Search parameter required', 400); } else { die(json_encode(['success' => false, 'error' => 'Search parameter required'])); }
+=======
+        die(json_encode(['success' => false, 'error' => 'Search parameter required']));
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
     }
 
     try {
@@ -85,7 +94,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'search') {
 http_response_code(400);
 echo json_encode(['success' => false, 'error' => 'No action specified']);
 ?>
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718

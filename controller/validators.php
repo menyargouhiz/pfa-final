@@ -153,4 +153,8 @@ function sanitizeString($str) {
     return htmlspecialchars(trim($str), ENT_QUOTES, 'UTF-8');
 }
 
+<<<<<<< HEAD
 
+=======
+?>
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718

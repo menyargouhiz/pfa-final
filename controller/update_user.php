@@ -1,6 +1,11 @@
 <?php
+<<<<<<< HEAD
 include_once(__DIR__ . "/../config/database.php");
 include_once(__DIR__ . "/../model/user.php");
+=======
+include("../config/database.php");
+include("../model/user.php");
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -43,7 +48,10 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
