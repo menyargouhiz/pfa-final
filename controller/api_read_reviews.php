@@ -30,7 +30,15 @@ try {
         $restaurant_id = intval($_GET['restaurant_id']);
         $reviews = Review::findByRestaurant($restaurant_id);
         sendSuccess($maskFactureCodes($reviews), 'Reviews retrieved', 200);
+<<<<<<< HEAD
         if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+<<<<<<< HEAD
+        if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+        exit;
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     }
 
     // Get reviews by user_id
@@ -40,6 +48,7 @@ try {
         $stmt->execute([$user_id]);
         $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         sendSuccess($maskFactureCodes($reviews), 'User reviews retrieved', 200);
+<<<<<<< HEAD
         if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
     }
 
@@ -51,6 +60,13 @@ try {
         $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         sendSuccess($maskFactureCodes($reviews), 'Author reviews retrieved', 200);
         if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+<<<<<<< HEAD
+        if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+        exit;
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     }
 
     // Get reviews for current logged-in user
@@ -64,7 +80,15 @@ try {
         $stmt->execute([$user_id]);
         $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         sendSuccess($maskFactureCodes($reviews), 'My reviews retrieved', 200);
+<<<<<<< HEAD
         if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+<<<<<<< HEAD
+        if(defined('PHPUNIT_RUNNING')) { throw new ResponseException('exit', 200); } else { exit; }
+=======
+        exit;
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     }
 
     // Get all reviews

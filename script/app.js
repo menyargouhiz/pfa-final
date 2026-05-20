@@ -45,6 +45,10 @@ function normalizeSearchText(value) {
     .toLowerCase();
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function tokenizeSearch(value) {
   return normalizeSearchText(value)
     .replace(/[^a-z0-9]+/g, ' ')
@@ -53,6 +57,11 @@ function tokenizeSearch(value) {
     .filter(term => !['the', 'and', 'for', 'with', 'near', 'best', 'restaurant', 'restaurants'].includes(term));
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function buildRestaurantSearchText(r) {
   return normalizeSearchText([
     r.name,
@@ -62,12 +71,19 @@ function buildRestaurantSearchText(r) {
     r.region,
     r.address,
     r.description,
+<<<<<<< HEAD
     getRestaurantReviewText(r),
     getRestaurantCommentText(r),
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     Array.isArray(r.tags) ? r.tags.join(' ') : r.tags
   ].filter(Boolean).join(' '));
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function restaurantImageAttrs(r, attrs = '') {
   const src = r?.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80';
   const alt = `alt="${String(r?.name || 'Restaurant')} image"`;
@@ -78,6 +94,7 @@ function uniqueSearchTerms(values) {
   return [...new Set(values.flatMap(value => tokenizeSearch(value)))];
 }
 
+<<<<<<< HEAD
 function getRestaurantReviewText(r) {
   return (r.reviews || [])
     .map(rv => [rv.author, rv.text].filter(Boolean).join(' '))
@@ -91,6 +108,8 @@ function getRestaurantCommentText(r) {
     .join(' ');
 }
 
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function buildRestaurantSearchProfile(r) {
   const tags = Array.isArray(r.tags) ? r.tags : String(r.tags || '').split(',');
   const profile = {
@@ -98,9 +117,13 @@ function buildRestaurantSearchProfile(r) {
     cuisine: uniqueSearchTerms([r.cuisine, r.category]),
     location: uniqueSearchTerms([r.city, r.region, r.address]),
     tags: uniqueSearchTerms(tags),
+<<<<<<< HEAD
     description: uniqueSearchTerms([r.description]),
     reviews: uniqueSearchTerms([getRestaurantReviewText(r)]),
     comments: uniqueSearchTerms([getRestaurantCommentText(r)])
+=======
+    description: uniqueSearchTerms([r.description])
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
   };
   profile.all = [...new Set(Object.values(profile).flat())];
   return profile;
@@ -161,6 +184,7 @@ function getMatchedSearchTerms(profile, terms) {
   return terms.filter(term => termMatchesProfile(term, profile.all || []));
 }
 
+<<<<<<< HEAD
 function getRestaurantSearchMatchReasons(r, terms) {
   const profile = r.searchProfile || buildRestaurantSearchProfile(r);
   const labels = [
@@ -178,6 +202,8 @@ function getRestaurantSearchMatchReasons(r, terms) {
     .map(([, label]) => label);
 }
 
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function edgeReasonsMatchTerms(reasons, terms) {
   return reasons.some(reason => {
     const reasonTerms = tokenizeSearch(reason);
@@ -188,7 +214,11 @@ function edgeReasonsMatchTerms(reasons, terms) {
 function getDirectRestaurantSearchScore(r, terms) {
   if (!terms.length) return 0;
   const profile = r.searchProfile || buildRestaurantSearchProfile(r);
+<<<<<<< HEAD
   const weights = { name: 55, cuisine: 34, tags: 26, location: 18, reviews: 16, comments: 12, description: 10 };
+=======
+  const weights = { name: 55, cuisine: 34, tags: 26, location: 18, description: 10 };
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
   let score = 0;
   let matchedTerms = 0;
 
@@ -244,7 +274,11 @@ function bfsRelatedRestaurants(seedIds, restaurantsById, graph, directScores, te
         queryScore: Math.max(1, Math.round((seedScore * coverageBoost) / (distance + 2))),
         searchDistance: distance + 1,
         linkedFrom: currentId,
+<<<<<<< HEAD
         matchReasons: [...new Set([...getRestaurantSearchMatchReasons(restaurant, terms), ...reasons])].slice(0, 3)
+=======
+        matchReasons: reasons.slice(0, 3)
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
       });
     });
   }
@@ -265,7 +299,11 @@ function searchRestaurants(restaurants, query) {
     .map(r => {
       const queryScore = getDirectRestaurantSearchScore(r, terms);
       if (queryScore > 0) directScores.set(Number(r.id), queryScore);
+<<<<<<< HEAD
       return { ...r, queryScore, searchDistance: 0, matchReasons: getRestaurantSearchMatchReasons(r, terms).slice(0, 3) };
+=======
+      return { ...r, queryScore, searchDistance: 0, matchReasons: [] };
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     })
     .filter(r => r.queryScore > 0)
     .sort((a, b) => b.queryScore - a.queryScore);
@@ -293,6 +331,11 @@ function searchRestaurants(restaurants, query) {
   );
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 // ===== STATE =====
 const state = {
   restaurants: [],
@@ -340,6 +383,10 @@ async function loadRestaurants() {
       return { ...r, reviews: allReviews, score: 0, avg: 0 };
     }).map(r => {
       const enriched = { ...r, score: calcScore(r), avg: avgRating(r) };
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
       return {
         ...enriched,
         searchText: buildRestaurantSearchText(enriched),
@@ -347,6 +394,13 @@ async function loadRestaurants() {
       };
     });
     state.restaurantSearchGraph = buildRestaurantSearchGraph(state.restaurants);
+<<<<<<< HEAD
+=======
+=======
+      return { ...enriched, searchText: buildRestaurantSearchText(enriched) };
+    });
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
     let pageRenderHandled = false;
     if (typeof window.initExplore === 'function') {
@@ -602,10 +656,13 @@ function openCasserole(id) {
           <div class="review-detail" style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
             Ambiance ${rv.ambiance || rv.rating} · Cleanliness ${rv.cleanliness || rv.rating} · Quality ${rv.quality || rv.rating} · Service ${rv.service || rv.rating}
             ${rv.facture_verified ? ' · Facture verified' : ''}
+<<<<<<< HEAD
           </div>
           <div class="comment-block">
             <div class="comment-block-title">Comments (${(rv.comments || []).length})</div>
             ${renderReviewComments(rv.comments || [])}
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
           </div>
         </div>`).join('')}
       </div>

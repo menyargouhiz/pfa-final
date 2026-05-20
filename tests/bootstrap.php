@@ -5,7 +5,10 @@ define('REAL_STDOUT', fopen('php://stdout', 'w'));
 
 // A simple mock for php:// streams
 class MockPhpStream {
+<<<<<<< HEAD
     public $context;
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     protected $position;
     public static $input = '';
     protected $path = '';

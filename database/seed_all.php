@@ -76,7 +76,14 @@ try {
     ];
 
     $restaurants = array_merge($restaurants, require __DIR__ . '/extra_restaurants.php');
+<<<<<<< HEAD
     $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+<<<<<<< HEAD
+    $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
     $stmtResto = $cnx->prepare("INSERT INTO restaurants (name, cuisine, category, address, city, phone, priceRange, lat, lng, tags, image, description, openHours) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $restoIds = [];

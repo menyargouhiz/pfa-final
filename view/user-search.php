@@ -79,10 +79,13 @@ function escapeHtml(value) {
   }[char]));
 }
 
+<<<<<<< HEAD
 function escapeJsString(value) {
   return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function initials(name) {
   return String(name || 'U').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
 }
@@ -127,11 +130,19 @@ function renderUsers(query = '') {
   }
 
   grid.innerHTML = users.map((user, index) => `
+<<<<<<< HEAD
     <button class="user-result-card ${String(user.id) === selectedUserId ? 'active' : ''}" style="--reveal-delay:${Math.min(index, 8) * 45}ms" type="button" onclick="selectUser('${escapeJsString(user.id)}')">
       <span class="user-avatar">${escapeHtml(initials(user.nom))}</span>
       <span class="user-card-main">
         <strong>${escapeHtml(user.nom)}</strong>
         <span>${escapeHtml(user.email || 'Community reviewer')}</span>
+=======
+    <button class="user-result-card ${Number(user.id) === selectedUserId ? 'active' : ''}" style="--reveal-delay:${Math.min(index, 8) * 45}ms" type="button" onclick="selectUser(${Number(user.id)})">
+      <span class="user-avatar">${escapeHtml(initials(user.nom))}</span>
+      <span class="user-card-main">
+        <strong>${escapeHtml(user.nom)}</strong>
+        <span>${escapeHtml(user.email)}</span>
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
       </span>
       <span class="user-review-count">${Number(user.review_count || 0)} reviews</span>
     </button>
@@ -139,18 +150,29 @@ function renderUsers(query = '') {
 }
 
 async function selectUser(userId) {
+<<<<<<< HEAD
   selectedUserId = String(userId);
   renderUsers(document.getElementById('user-search-input').value.trim());
 
   const user = users.find(item => String(item.id) === selectedUserId);
+=======
+  selectedUserId = userId;
+  renderUsers(document.getElementById('user-search-input').value.trim());
+
+  const user = users.find(item => Number(item.id) === userId);
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
   const panel = document.getElementById('user-review-panel');
   panel.innerHTML = '<div class="user-loading">Loading reviews...</div>';
 
   try {
+<<<<<<< HEAD
     const params = selectedUserId.startsWith('author:')
       ? `author=${encodeURIComponent(selectedUserId.slice(7))}`
       : `user_id=${encodeURIComponent(selectedUserId)}`;
     const res = await fetch(`../controller/api_read_reviews.php?${params}`, {
+=======
+    const res = await fetch(`../controller/api_read_reviews.php?user_id=${encodeURIComponent(userId)}`, {
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
       credentials: 'include'
     });
     const data = await res.json();

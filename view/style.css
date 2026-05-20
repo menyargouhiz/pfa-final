@@ -993,6 +993,7 @@ body.dark #navbar {
   color: var(--text-muted);
 }
 
+<<<<<<< HEAD
 .match-reasons {
   display: flex;
   flex-wrap: wrap;
@@ -1010,6 +1011,8 @@ body.dark #navbar {
   padding: 0.22rem 0.45rem;
 }
 
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 .search-divider {
   width: 1px;
   background: var(--border);
@@ -1850,9 +1853,12 @@ body.dark .casserole-close {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1.1rem;
+<<<<<<< HEAD
   background: var(--bg-card);
   border-left: 4px solid var(--accent);
   box-shadow: var(--shadow-sm);
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 }
 
 .review-header {
@@ -2013,6 +2019,7 @@ body.dark .form-select:focus {
   font-weight: 700;
 }
 
+<<<<<<< HEAD
 .review-text {
   color: var(--text-primary);
   font-size: 0.95rem;
@@ -2090,6 +2097,8 @@ body.dark .form-select:focus {
   padding: 0.55rem 0;
 }
 
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 .badge-nouveau {
   background: #F0FDF4;
   color: #16A34A;
@@ -2408,10 +2417,19 @@ body.dark .form-select:focus {
 .user-review-list {
   display: grid;
   gap: 0.85rem;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
   max-height: 350px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.5rem;
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 }
 
 .user-review-item {
@@ -2934,6 +2952,32 @@ footer {
   z-index: 10;
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+/* Nav icon links (heart, bookmark in navbar) */
+.nav-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-decoration: none;
+}
+
+.nav-icon-link:hover {
+  transform: scale(1.12) translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(232, 132, 90, 0.2);
+}
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
 /* ===== WISHLIST LIST LAYOUT ===== */
 .wishlist-list {

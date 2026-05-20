@@ -184,9 +184,20 @@ function getFiltered() {
   if (filters.minRating > 0)      list = list.filter(r => r.avg >= filters.minRating);
   if (filters.city !== 'all')     list = list.filter(r => r.region === filters.city);
   if (filters.query) {
+<<<<<<< HEAD
     list = searchRestaurants(list, filters.query);
   } else {
     list = list.map(r => ({ ...r, queryScore: r.score || 0, searchDistance: 0, matchReasons: [] }));
+=======
+<<<<<<< HEAD
+    list = searchRestaurants(list, filters.query);
+  } else {
+    list = list.map(r => ({ ...r, queryScore: r.score || 0, searchDistance: 0, matchReasons: [] }));
+=======
+    const terms = normalizeSearchText(filters.query).split(/\s+/).filter(Boolean);
+    list = list.filter(r => terms.every(term => (r.searchText || '').includes(term)));
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
   }
   if (filters.queryCity) {
     const c = normalizeSearchText(filters.queryCity);

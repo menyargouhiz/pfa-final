@@ -142,7 +142,15 @@ function renderTopPicks() {
   const medals = ['🥇','🥈','🥉','🏅'];
   document.getElementById('top-picks').innerHTML = top.map((r,i) => `
     <div class="top-pick" data-category="${r.category}" style="--reveal-delay:${i * 80}ms" onclick="openCasserole(${r.id})">
+<<<<<<< HEAD
       <div class="top-pick-img"><img ${restaurantImageAttrs(r, 'loading="lazy"')} /></div>
+=======
+<<<<<<< HEAD
+      <div class="top-pick-img"><img ${restaurantImageAttrs(r, 'loading="lazy"')} /></div>
+=======
+      <div class="top-pick-img"><img src="${r.image}" alt="${r.name}" loading="lazy" /></div>
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
       <div class="top-pick-body">
         <div class="top-pick-medal">${medals[i]}</div>
         <div class="top-pick-name">${r.name}</div>

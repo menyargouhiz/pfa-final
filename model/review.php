@@ -12,7 +12,10 @@ class Review
     public $service;
     public $text;
     public $facture_code;
+<<<<<<< HEAD
     public $facture_verified = false;
+=======
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
     public $date;
     public $user_id;
 

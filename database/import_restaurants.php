@@ -30,7 +30,14 @@ $restaurants = [
 ];
 
 $restaurants = array_merge($restaurants, require __DIR__ . '/extra_restaurants.php');
+<<<<<<< HEAD
 $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+<<<<<<< HEAD
+$restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
 try {
     $cnx->exec("CREATE TABLE IF NOT EXISTS restaurants (

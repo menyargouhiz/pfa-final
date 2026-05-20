@@ -1,6 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+<<<<<<< HEAD
 require_once __DIR__ . '/restaurant_images.php';
+=======
+<<<<<<< HEAD
+require_once __DIR__ . '/restaurant_images.php';
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
 function indexExists(PDO $cnx, string $table, string $indexName): bool
 {
@@ -26,6 +33,10 @@ function addIndexIfMissing(PDO $cnx, string $table, string $indexName, string $d
     echo "Added index $indexName.\n";
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function getIndexColumns(PDO $cnx, string $table, string $indexName): array
 {
     $stmt = $cnx->prepare("
@@ -59,6 +70,11 @@ function ensureFullTextIndex(PDO $cnx, string $table, string $indexName, array $
     echo "Added index $indexName.\n";
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 function columnExists(PDO $cnx, string $table, string $columnName): bool
 {
     $stmt = $cnx->prepare("
@@ -91,7 +107,15 @@ try {
     addIndexIfMissing($cnx, 'restaurants', 'idx_restaurants_price', 'INDEX `idx_restaurants_price` (`priceRange`)');
     addIndexIfMissing($cnx, 'restaurants', 'idx_restaurants_name', 'INDEX `idx_restaurants_name` (`name`)');
     addIndexIfMissing($cnx, 'restaurants', 'idx_restaurants_city_category', 'INDEX `idx_restaurants_city_category` (`city`, `category`)');
+<<<<<<< HEAD
     ensureFullTextIndex($cnx, 'restaurants', 'ft_restaurants_search', ['name', 'cuisine', 'category', 'city', 'tags', 'description', 'address']);
+=======
+<<<<<<< HEAD
+    ensureFullTextIndex($cnx, 'restaurants', 'ft_restaurants_search', ['name', 'cuisine', 'category', 'city', 'tags', 'description', 'address']);
+=======
+    addIndexIfMissing($cnx, 'restaurants', 'ft_restaurants_search', 'FULLTEXT INDEX `ft_restaurants_search` (`name`, `cuisine`, `tags`, `description`, `address`)');
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
     addIndexIfMissing($cnx, 'reviews', 'idx_reviews_restaurant_date', 'INDEX `idx_reviews_restaurant_date` (`restaurant_id`, `date`)');
     addIndexIfMissing($cnx, 'reviews', 'idx_reviews_user_date', 'INDEX `idx_reviews_user_date` (`user_id`, `date`)');
@@ -105,7 +129,14 @@ try {
 
     echo "Adding extra restaurants...\n";
     $restaurants = require __DIR__ . '/extra_restaurants.php';
+<<<<<<< HEAD
     $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+<<<<<<< HEAD
+    $restaurants = appetitus_assign_unique_restaurant_images($restaurants);
+=======
+>>>>>>> df34791d4b40b7fc6586c4e6c6ecd09ede24f718
+>>>>>>> 9f33d9882a7e691571e96025575b7eef87d6352b
 
     $exists = $cnx->prepare("SELECT id FROM restaurants WHERE name = ? AND city = ? LIMIT 1");
     $insert = $cnx->prepare("
