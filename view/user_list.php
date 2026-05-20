@@ -39,7 +39,7 @@ include("../config/database.php");
         <!-- SEARCH -->
         <div class="mb-3">
             <div class="input-group">
-                <input type="text" class="form-control" id="searchInput" placeholder="Rechercher...">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search by username or email...">
                 <button class="btn btn-outline-secondary" id="searchBtn">Search</button>
             </div>
         </div>

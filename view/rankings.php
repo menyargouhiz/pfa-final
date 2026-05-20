@@ -240,6 +240,7 @@
     <li><a href="index.php">Home</a></li>
     <li><a href="explore.php">Explore</a></li>
     <li><a href="rankings.php" class="active">Top 10</a></li>
+    <li><a href="user-search.php">Reviewers</a></li>
   </ul>
   <div class="nav-actions" id="nav-actions"></div>
 </nav>
@@ -282,14 +283,20 @@
 
 </div>
 
-<script src="app.js"></script>
+<script src="../script/app.js"></script>
 <script>
 let currentCategory = 'overall';
 let currentCuisine = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderRankings();
+  if (window.state?.restaurants?.length) {
+    renderRankings();
+  } else {
+    document.getElementById('rankings-grid').innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-muted);">Loading rankings...</div>';
+  }
 });
+
+window.initRankings = renderRankings;
 
 function showRankingCategory(category) {
   currentCategory = category;
@@ -306,6 +313,11 @@ function filterByCuisine(cuisine) {
 }
 
 function renderRankings() {
+  if (!window.state?.restaurants?.length) {
+    document.getElementById('rankings-grid').innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-muted);">Loading rankings...</div>';
+    return;
+  }
+
   const restaurants = [...window.state.restaurants];
 
   // Filter by cuisine if needed
@@ -354,7 +366,7 @@ function renderRankings() {
     return `
       <div class="ranking-card">
         <div class="ranking-badge ${badgeClass}">#${rank}</div>
-        <img src="${restaurant.image}" alt="${restaurant.name}" class="ranking-image">
+        <img class="ranking-image" ${restaurantImageAttrs(restaurant)}>
         <div class="ranking-content">
           <div class="ranking-header">
             <h3 class="ranking-title">${restaurant.name}</h3>

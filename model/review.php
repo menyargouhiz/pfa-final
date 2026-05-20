@@ -11,15 +11,18 @@ class Review
     public $quality;
     public $service;
     public $text;
+    public $facture_code;
+    public $facture_verified = false;
     public $date;
     public $user_id;
 
-    public function __construct($restaurant_id = "", $author = "", $rating = 0, $text = "", $date = "", $user_id = null, $ambiance = 0, $cleanliness = 0, $quality = 0, $service = 0)
+    public function __construct($restaurant_id = "", $author = "", $rating = 0, $text = "", $date = "", $user_id = null, $ambiance = 0, $cleanliness = 0, $quality = 0, $service = 0, $facture_code = "")
     {
         if ($restaurant_id !== "") $this->restaurant_id = $restaurant_id;
         if ($author !== "") $this->author = $author;
         if ($rating !== 0) $this->rating = $rating;
         if ($text !== "") $this->text = $text;
+        if ($facture_code !== "") $this->facture_code = $facture_code;
         if ($date !== "") $this->date = $date;
         $this->user_id = $user_id;
         $this->ambiance = $ambiance;
@@ -28,11 +31,11 @@ class Review
         $this->service = $service;
     }
 
-    public static function create($restaurant_id, $author, $rating, $text, $ambiance = 0, $cleanliness = 0, $quality = 0, $service = 0, $user_id = null) {
+    public static function create($restaurant_id, $author, $rating, $text, $facture_code, $ambiance = 0, $cleanliness = 0, $quality = 0, $service = 0, $user_id = null) {
         global $cnx;
         $date = date('Y-m-d');
-        $stmt = $cnx->prepare("INSERT INTO reviews (restaurant_id, author, rating, ambiance, cleanliness, quality, service, text, date, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$restaurant_id, $author, $rating, $ambiance, $cleanliness, $quality, $service, $text, $date, $user_id]);
+        $stmt = $cnx->prepare("INSERT INTO reviews (restaurant_id, author, rating, ambiance, cleanliness, quality, service, text, facture_code, date, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$restaurant_id, $author, $rating, $ambiance, $cleanliness, $quality, $service, $text, $facture_code, $date, $user_id]);
     }
 
     public static function findByRestaurant($restaurant_id) {

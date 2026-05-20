@@ -42,6 +42,7 @@
   <ul class="nav-links">
     <li><a href="index.php">Home</a></li>
     <li><a href="explore.php">Explore</a></li>
+    <li><a href="user-search.php">Reviewers</a></li>
   </ul>
   <div class="nav-actions" id="nav-actions"></div>
 </nav>
@@ -54,13 +55,16 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="../script/app.js"></script>
 <script>
 let selectedRestaurant = null;
 let currentRatings = { ambiance: 0, cleanliness: 0, quality: 0, service: 0 };
 let selectedPhotos = [];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', initRatePage);
+window.initRate = initRatePage;
+
+function initRatePage() {
   const user = getCurrentUser();
   const container = document.getElementById('rate-page');
 
@@ -74,6 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <a href="login.php" class="btn btn-primary btn-lg">Log In</a>
           <a href="signup.php" class="btn btn-ghost btn-lg">Sign Up</a>
         </div>
+      </div>`;
+    return;
+  }
+
+  if (!window.state?.restaurants?.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:4rem 1rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
+        <h2 style="margin-bottom:.75rem;">Loading restaurants...</h2>
+        <p style="color:var(--text-muted);">Your rating form will appear in a moment.</p>
       </div>`;
     return;
   }
@@ -92,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Show restaurant selector
   renderRestaurantSelector(user);
-});
+}
 
 function renderRestaurantSelector(user) {
   const container = document.getElementById('rate-page');
@@ -120,7 +134,7 @@ function renderRestaurantSelector(user) {
       <div id="restaurant-list">
         ${unreviewedRestaurants.map(r => `
           <div class="restaurant-card" onclick="selectRestaurant(${r.id})">
-            <img src="${r.image}" alt="${r.name}" />
+            <img ${restaurantImageAttrs(r)} />
             <div class="restaurant-card-info">
               <div class="restaurant-card-name">${r.name}</div>
               <div class="restaurant-card-meta">📍 ${r.city} · ${r.priceRange} · ${r.cuisine}</div>
@@ -163,7 +177,7 @@ function renderRatingForm(restaurant, user) {
       <h2>Rate ${restaurant.name}</h2>
 
       <div class="restaurant-card" style="margin-bottom:2rem;">
-        <img src="${restaurant.image}" alt="${restaurant.name}" />
+        <img ${restaurantImageAttrs(restaurant)} />
         <div class="restaurant-card-info">
           <div class="restaurant-card-name">${restaurant.name}</div>
           <div class="restaurant-card-meta">📍 ${restaurant.city} · ${restaurant.priceRange} · ${restaurant.cuisine}</div>
@@ -219,6 +233,16 @@ function renderRatingForm(restaurant, user) {
         </div>
 
         <div class="form-group">
+          <label class="form-label">Facture code</label>
+          <input class="form-input" id="facture-code" placeholder="Code on your receipt..." maxlength="100" autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Review</label>
+          <textarea class="form-textarea" id="review-text" placeholder="Share your experience..." maxlength="1000"></textarea>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Photos (Optional)</label>
           <div class="photo-upload">
             <input type="file" id="photo-input" accept="image/*" multiple style="display:none;" />
@@ -251,7 +275,6 @@ function setRating(category, rating) {
   currentRatings[category] = rating;
   const stars = document.querySelectorAll(`.rating-controls[data-category="${category}"] .star`);
   const ratingText = document.getElementById('rating-text');
-  const submitBtn = document.getElementById('submit-btn');
 
   stars.forEach((star, index) => {
     if (index < rating) {
@@ -270,13 +293,29 @@ function setRating(category, rating) {
     ratingText.textContent = 'Rate all four categories';
   }
 
-  submitBtn.disabled = !complete;
+  updateSubmitState();
+}
+
+function updateSubmitState() {
+  const submitBtn = document.getElementById('submit-btn');
+  if (!submitBtn) return;
+
+  const ratingsComplete = Object.values(currentRatings).every(value => value > 0);
+  const reviewText = document.getElementById('review-text')?.value.trim() || '';
+  const factureCode = document.getElementById('facture-code')?.value.trim() || '';
+  submitBtn.disabled = !(ratingsComplete && reviewText.length >= 5 && factureCode.length >= 4);
 }
 
 // Photo upload functionality
 document.addEventListener('change', (e) => {
   if (e.target.id === 'photo-input') {
     handlePhotoSelection(e.target.files);
+  }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'review-text' || e.target.id === 'facture-code') {
+    updateSubmitState();
   }
 });
 
@@ -340,22 +379,52 @@ document.addEventListener('submit', (e) => {
   }
 });
 
-function submitReview() {
+async function submitReview() {
   const user = getCurrentUser();
   const reviewText = document.getElementById('review-text').value.trim();
+  const factureCode = document.getElementById('facture-code').value.trim();
   const ratings = currentRatings;
   const missing = Object.values(ratings).some(value => value === 0);
 
-  if (!selectedRestaurant || missing || !reviewText) {
+  if (!selectedRestaurant || missing || !reviewText || factureCode.length < 4) {
     toast('Please fill in all fields', 'error');
     return;
   }
 
   const overallRating = Math.round((ratings.ambiance + ratings.cleanliness + ratings.quality + ratings.service) / 4);
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
 
-  // Create new review
+  try {
+    const res = await fetch('../controller/api_create_review.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        restaurant_id: selectedRestaurant.id,
+        author: user.name,
+        rating: overallRating,
+        ambiance: ratings.ambiance,
+        cleanliness: ratings.cleanliness,
+        quality: ratings.quality,
+        service: ratings.service,
+        facture_code: factureCode,
+        text: reviewText
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to submit review');
+    }
+  } catch (err) {
+    submitBtn.disabled = false;
+    toast(err.message, 'error');
+    return;
+  }
+
+  const existingIds = window.state.userReviews.map(r => Number(r.id) || 0);
   const newReview = {
-    id: Math.max(...window.state.userReviews.map(r => r.id)) + 1,
+    id: (existingIds.length ? Math.max(...existingIds) : 0) + 1,
     restaurantId: selectedRestaurant.id,
     userId: user.id,
     rating: overallRating,
@@ -363,9 +432,10 @@ function submitReview() {
     cleanliness: ratings.cleanliness,
     quality: ratings.quality,
     service: ratings.service,
+    facture_verified: true,
     text: reviewText,
     photos: selectedPhotos.map(photo => ({ name: photo.name, dataUrl: photo.dataUrl })),
-    date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    date: new Date().toISOString().split('T')[0]
   };
 
   // Add to reviews

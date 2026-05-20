@@ -9,3 +9,7 @@ echo json_encode([
     'user_reviews_in_db' => isset($_SESSION['user_id']) ? $cnx->query("SELECT id FROM reviews WHERE user_id = " . intval($_SESSION['user_id']))->fetchAll(PDO::FETCH_ASSOC) : []
 ]);
 ?>
+
+
+
+

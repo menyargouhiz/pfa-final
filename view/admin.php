@@ -245,32 +245,53 @@
 
 <script src="app.js"></script>
 <script>
-// Get current user data - in a real app, this would come from a backend
-const users = [];
-const currentUser = getCurrentUser();
-if (currentUser) {
-  users.push(currentUser);
-} else {
-  // Fallback mock data for demo
-  users.push(
-    { id: 1, name: "John Doe", email: "john@example.com", joinDate: "2024-01-01", reviewCount: 2, favorites: [1, 2], wishlist: [3, 4] },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", joinDate: "2024-01-05", reviewCount: 1, favorites: [2], wishlist: [1, 5] },
-    { id: 3, name: "Alice Johnson", email: "alice@example.com", joinDate: "2024-01-03", reviewCount: 2, favorites: [], wishlist: [2, 6] },
-    { id: 4, name: "Bob Wilson", email: "bob@example.com", joinDate: "2024-01-08", reviewCount: 1, favorites: [4], wishlist: [7] },
-    { id: 5, name: "Charlie Brown", email: "charlie@example.com", joinDate: "2024-01-10", reviewCount: 1, favorites: [3, 5], wishlist: [] }
-  );
-}
-
+let users = [];
+let adminStats = {};
+let adminFavorites = [];
 let currentEditingId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  updateOverview();
-  renderRestaurantsTable();
-  renderRestaurantOwnersTable();
-  renderReviewsTable();
-  renderUsersTable();
-  renderFavoritesTable();
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAdminDashboard();
 });
+
+async function adminRequest(action, payload = null) {
+  const options = { credentials: 'include' };
+  if (payload) {
+    options.method = 'POST';
+    options.headers = { 'Content-Type': 'application/json' };
+    options.body = JSON.stringify(payload);
+  }
+
+  const res = await fetch(`../controller/api_admin.php?action=${encodeURIComponent(action)}`, options);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Admin request failed');
+  return data.data || {};
+}
+
+async function loadAdminDashboard() {
+  try {
+    const data = await adminRequest('dashboard');
+    adminStats = data.stats || {};
+    users = data.users || [];
+    adminFavorites = data.favorites || [];
+    window.state.restaurants = (data.restaurants || []).map(r => ({
+      ...r,
+      avg: Number(r.avg || 0),
+      review_count: Number(r.review_count || 0),
+      reviews: []
+    }));
+    window.state.userReviews = data.reviews || [];
+
+    updateOverview();
+    renderRestaurantsTable();
+    renderRestaurantOwnersTable();
+    renderReviewsTable();
+    renderUsersTable();
+    renderFavoritesTable();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
 
 function showSection(section) {
   document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
@@ -280,9 +301,9 @@ function showSection(section) {
 }
 
 function updateOverview() {
-  document.getElementById('total-restaurants').textContent = window.state.restaurants.length;
-  document.getElementById('total-reviews').textContent = window.state.userReviews.length;
-  document.getElementById('total-users').textContent = users.length;
+  document.getElementById('total-restaurants').textContent = adminStats.total_restaurants ?? window.state.restaurants.length;
+  document.getElementById('total-reviews').textContent = adminStats.total_reviews ?? window.state.userReviews.length;
+  document.getElementById('total-users').textContent = adminStats.total_users ?? users.length;
 
   // Count restaurant owners
   let restaurantOwnerCount = 0;
@@ -294,15 +315,9 @@ function updateOverview() {
   }
   document.getElementById('total-restaurant-owners').textContent = restaurantOwnerCount;
 
-  const avgRating = window.state.restaurants.reduce((sum, r) => sum + r.avg, 0) / window.state.restaurants.length;
-  document.getElementById('avg-rating').textContent = avgRating.toFixed(1);
-
-  // Calculate total favorites and wishlist items
-  const totalFavorites = users.reduce((sum, user) => sum + (user.favorites ? user.favorites.length : 0), 0);
-  const totalWishlist = users.reduce((sum, user) => sum + (user.wishlist ? user.wishlist.length : 0), 0);
-
-  document.getElementById('total-favorites').textContent = totalFavorites;
-  document.getElementById('total-wishlist').textContent = totalWishlist;
+  document.getElementById('avg-rating').textContent = Number(adminStats.avg_rating || 0).toFixed(1);
+  document.getElementById('total-favorites').textContent = adminStats.total_favorites ?? 0;
+  document.getElementById('total-wishlist').textContent = adminStats.total_wishlist ?? 0;
 }
 
 function renderRestaurantsTable() {
@@ -313,7 +328,7 @@ function renderRestaurantsTable() {
       <td>${r.city}</td>
       <td>${r.cuisine}</td>
       <td>${r.avg.toFixed(1)} ⭐</td>
-      <td>${r.reviews.length}</td>
+      <td>${r.review_count ?? r.reviews.length}</td>
       <td>
         <button class="btn-admin btn-edit" onclick="editRestaurant(${r.id})">Edit</button>
         <button class="btn-admin btn-delete" onclick="deleteRestaurant(${r.id})">Delete</button>
@@ -363,8 +378,6 @@ function renderRestaurantOwnersTable() {
 function renderReviewsTable() {
   const tbody = document.getElementById('reviews-table-body');
   tbody.innerHTML = window.state.userReviews.map(review => {
-    const restaurant = window.state.restaurants.find(r => r.id === review.restaurantId);
-    const user = users.find(u => u.id === review.userId);
     const photosHtml = review.photos && review.photos.length ?
       `<div style="display:flex;gap:2px;">${review.photos.slice(0,3).map(photo =>
         `<img src="${photo.dataUrl}" alt="${photo.name}" style="width:30px;height:30px;object-fit:cover;border-radius:2px;border:1px solid var(--border);" />`
@@ -372,8 +385,8 @@ function renderReviewsTable() {
       '<span style="color:var(--text-muted);">None</span>';
     return `
       <tr>
-        <td>${restaurant ? restaurant.name : 'Unknown'}</td>
-        <td>${user ? user.name : 'Unknown'}</td>
+        <td>${review.restaurant_name || 'Unknown'}</td>
+        <td>${review.user_name || review.author || 'Unknown'}</td>
         <td>${review.rating} ⭐</td>
         <td>${review.text.substring(0, 50)}${review.text.length > 50 ? '...' : ''}</td>
         <td>${photosHtml}</td>
@@ -390,10 +403,10 @@ function renderUsersTable() {
   const tbody = document.getElementById('users-table-body');
   tbody.innerHTML = users.map(u => `
     <tr>
-      <td>${u.name}</td>
+      <td>${u.nom}</td>
       <td>${u.email}</td>
-      <td>${new Date(u.joinDate).toLocaleDateString()}</td>
-      <td>${u.reviewCount}</td>
+      <td>-</td>
+      <td>${u.review_count || 0}</td>
       <td>
         <button class="btn-admin btn-delete" onclick="deleteUser(${u.id})">Delete</button>
       </td>
@@ -403,30 +416,15 @@ function renderUsersTable() {
 
 function renderFavoritesTable() {
   const tbody = document.getElementById('favorites-table-body');
-  tbody.innerHTML = users.map(u => {
-    const favoritesCount = u.favorites ? u.favorites.length : 0;
-    const wishlistCount = u.wishlist ? u.wishlist.length : 0;
-
-    const favoritesList = u.favorites ? u.favorites.map(id => {
-      const restaurant = window.state.restaurants.find(r => r.id === id);
-      return restaurant ? restaurant.name : `ID:${id}`;
-    }).join(', ') : 'None';
-
-    const wishlistList = u.wishlist ? u.wishlist.map(id => {
-      const restaurant = window.state.restaurants.find(r => r.id === id);
-      return restaurant ? restaurant.name : `ID:${id}`;
-    }).join(', ') : 'None';
-
-    return `
+  tbody.innerHTML = adminFavorites.map(row => `
       <tr>
-        <td>${u.name}</td>
-        <td>${favoritesCount}</td>
-        <td>${wishlistCount}</td>
-        <td style="max-width:200px;word-wrap:break-word;">${favoritesList}</td>
-        <td style="max-width:200px;word-wrap:break-word;">${wishlistList}</td>
+        <td>${row.user_name}</td>
+        <td>${row.favorites_count}</td>
+        <td>${row.wishlist_count}</td>
+        <td style="max-width:200px;word-wrap:break-word;">${row.favorites_list}</td>
+        <td style="max-width:200px;word-wrap:break-word;">${row.wishlist_list}</td>
       </tr>
-    `;
-  }).join('');
+  `).join('');
 }
 
 function openAddRestaurantModal() {
@@ -456,10 +454,11 @@ function closeModal() {
   currentEditingId = null;
 }
 
-document.getElementById('restaurant-form').addEventListener('submit', (e) => {
+document.getElementById('restaurant-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const restaurant = {
+    id: currentEditingId,
     name: document.getElementById('restaurant-name').value,
     city: document.getElementById('restaurant-city').value,
     category: document.getElementById('restaurant-category').value,
@@ -472,23 +471,14 @@ document.getElementById('restaurant-form').addEventListener('submit', (e) => {
     score: 0
   };
 
-  if (currentEditingId) {
-    // Edit existing
-    const index = window.state.restaurants.findIndex(r => r.id === currentEditingId);
-    restaurant.id = currentEditingId;
-    restaurant.avg = window.state.restaurants[index].avg;
-    restaurant.reviews = window.state.restaurants[index].reviews;
-    restaurant.score = window.state.restaurants[index].score;
-    window.state.restaurants[index] = restaurant;
-  } else {
-    // Add new
-    restaurant.id = Math.max(...window.state.restaurants.map(r => r.id)) + 1;
-    window.state.restaurants.push(restaurant);
+  try {
+    await adminRequest('save_restaurant', restaurant);
+    toast(currentEditingId ? 'Restaurant updated successfully' : 'Restaurant added successfully');
+    closeModal();
+    await loadAdminDashboard();
+  } catch (err) {
+    toast(err.message, 'error');
   }
-
-  updateOverview();
-  renderRestaurantsTable();
-  closeModal();
 });
 
 function getCuisineFromCategory(category) {
@@ -504,47 +494,37 @@ function getCuisineFromCategory(category) {
   return mapping[category] || 'Other';
 }
 
-function deleteRestaurant(id) {
+async function deleteRestaurant(id) {
   if (!confirm('Are you sure you want to delete this restaurant?')) return;
-  window.state.restaurants = window.state.restaurants.filter(r => r.id !== id);
-  // Also remove associated reviews
-  window.state.userReviews = window.state.userReviews.filter(review => review.restaurantId !== id);
-  updateOverview();
-  renderRestaurantsTable();
-  renderReviewsTable();
+  try {
+    await adminRequest('delete_restaurant', { id });
+    toast('Restaurant deleted successfully');
+    await loadAdminDashboard();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
 }
 
-function deleteReview(id) {
+async function deleteReview(id) {
   if (!confirm('Are you sure you want to delete this review?')) return;
-  window.state.userReviews = window.state.userReviews.filter(review => review.id !== id);
-  // Update restaurant stats
-  window.state.restaurants.forEach(r => {
-    r.reviews = window.state.userReviews.filter(review => review.restaurantId === r.id);
-    r.avg = r.reviews.length ? r.reviews.reduce((sum, review) => sum + review.rating, 0) / r.reviews.length : 0;
-    r.score = Math.round(r.avg * 20); // Simple scoring
-  });
-  updateOverview();
-  renderReviewsTable();
-  renderRestaurantsTable();
+  try {
+    await adminRequest('delete_review', { id });
+    toast('Review deleted successfully');
+    await loadAdminDashboard();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
 }
 
-function deleteUser(id) {
+async function deleteUser(id) {
   if (!confirm('Are you sure you want to delete this user?')) return;
-  // Remove user
-  const index = users.findIndex(u => u.id === id);
-  users.splice(index, 1);
-  // Remove their reviews
-  window.state.userReviews = window.state.userReviews.filter(review => review.userId !== id);
-  // Update restaurant stats
-  window.state.restaurants.forEach(r => {
-    r.reviews = window.state.userReviews.filter(review => review.restaurantId === r.id);
-    r.avg = r.reviews.length ? r.reviews.reduce((sum, review) => sum + review.rating, 0) / r.reviews.length : 0;
-    r.score = Math.round(r.avg * 20);
-  });
-  updateOverview();
-  renderUsersTable();
-  renderReviewsTable();
-  renderRestaurantsTable();
+  try {
+    await adminRequest('delete_user', { id });
+    toast('User deleted successfully');
+    await loadAdminDashboard();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
 }
 
 function editRestaurantOwner(email) {

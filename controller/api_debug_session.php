@@ -17,3 +17,7 @@ $sessionInfo = [
 
 sendSuccess($sessionInfo, 'Session debug info');
 ?>
+
+
+
+

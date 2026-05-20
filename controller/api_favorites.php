@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/response.php';
 
+
 header('Content-Type: application/json');
 setCorsHeaders();
 handleCorsPreFlight();
@@ -73,3 +74,7 @@ try {
     sendError($e->getMessage(), 500);
 }
 ?>
+
+
+
+

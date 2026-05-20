@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/response.php';
+require_once __DIR__ . '/../database/restaurant_images.php';
 
 header('Content-Type: application/json');
 setCorsHeaders();
@@ -27,6 +28,7 @@ try {
             ");
             $stmt->execute([$user_id]);
             $wishlist = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $wishlist = appetitus_assign_unique_restaurant_images($wishlist);
             sendSuccess($wishlist, 'Wishlist retrieved');
             break;
 
@@ -73,3 +75,7 @@ try {
     sendError($e->getMessage(), 500);
 }
 ?>
+
+
+
+

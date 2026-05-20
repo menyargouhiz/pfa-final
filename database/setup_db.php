@@ -52,7 +52,13 @@ try {
         tags VARCHAR(255),
         image VARCHAR(500),
         description TEXT,
-        openHours VARCHAR(200)
+        openHours VARCHAR(200),
+        INDEX idx_restaurants_category (category),
+        INDEX idx_restaurants_city (city),
+        INDEX idx_restaurants_price (priceRange),
+        INDEX idx_restaurants_name (name),
+        INDEX idx_restaurants_city_category (city, category),
+        FULLTEXT INDEX ft_restaurants_search (name, cuisine, category, city, tags, description, address)
     )");
     
     // Reviews table
@@ -63,9 +69,19 @@ try {
         user_id INT,
         author VARCHAR(255) NOT NULL,
         rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        ambiance INT NOT NULL DEFAULT 0,
+        cleanliness INT NOT NULL DEFAULT 0,
+        quality INT NOT NULL DEFAULT 0,
+        service INT NOT NULL DEFAULT 0,
         text TEXT,
+        facture_code VARCHAR(100) DEFAULT NULL,
         date DATE NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_reviews_restaurant_date (restaurant_id, date),
+        INDEX idx_reviews_user_date (user_id, date),
+        INDEX idx_reviews_rating (rating),
+        INDEX idx_reviews_facture_code (facture_code),
+        FULLTEXT INDEX ft_reviews_text (author, text),
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )");
@@ -79,6 +95,8 @@ try {
         author VARCHAR(255) NOT NULL,
         text TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_comments_review_created (review_id, created_at),
+        FULLTEXT INDEX ft_comments_text (author, text),
         FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )");
@@ -91,6 +109,7 @@ try {
         restaurant_id INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_fav (user_id, restaurant_id),
+        INDEX idx_favorites_restaurant (restaurant_id),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
     )");
@@ -103,6 +122,7 @@ try {
         restaurant_id INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_wish (user_id, restaurant_id),
+        INDEX idx_wishlist_restaurant (restaurant_id),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
     )");

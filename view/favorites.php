@@ -94,7 +94,7 @@ async function loadFavorites() {
     grid.innerHTML = favorites.map((f, i) => `
       <div class="restaurant-card reveal" data-category="${f.category}" onclick="openCasserole(${f.restaurant_id})" style="animation-delay:${i * 0.05}s">
         <div class="card-img-wrap">
-          <img src="${f.image}" alt="${f.name}" loading="lazy" />
+          <img ${restaurantImageAttrs(f, 'loading="lazy"')} />
           <div class="card-steam">
             <div class="steam-wisp"></div><div class="steam-wisp"></div>
             <div class="steam-wisp"></div><div class="steam-wisp"></div>

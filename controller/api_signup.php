@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../model/User.php';
+require_once __DIR__ . '/../model/user.php';
 require_once __DIR__ . '/validators.php';
 require_once __DIR__ . '/response.php';
 
@@ -56,3 +56,7 @@ try {
     sendError('Registration failed: ' . $e->getMessage(), 500);
 }
 ?>
+
+
+
+

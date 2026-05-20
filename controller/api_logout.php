@@ -18,3 +18,6 @@ try {
     sendError('Logout failed', 500);
 }
 ?>
+
+
+

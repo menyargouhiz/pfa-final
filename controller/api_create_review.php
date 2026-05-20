@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../model/Review.php';
+require_once __DIR__ . '/../model/review.php';
 require_once __DIR__ . '/validators.php';
 require_once __DIR__ . '/response.php';
 
@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!$data || !isset($data['restaurant_id'], $data['text'], $data['author'])) {
-    sendError('Missing required fields: restaurant_id, author, text', 400);
+if (!$data || !isset($data['restaurant_id'], $data['text'], $data['author'], $data['facture_code'])) {
+    sendError('Missing required fields: restaurant_id, author, text, facture_code', 400);
 }
 
 try {
@@ -28,6 +28,11 @@ try {
     $textValidation = validateReviewText($data['text']);
     if (!$textValidation['valid']) {
         sendError($textValidation['error'], 400);
+    }
+
+    $factureValidation = validateFactureCode($data['facture_code']);
+    if (!$factureValidation['valid']) {
+        sendError($factureValidation['error'], 400);
     }
 
     $hasDimensions = isset($data['ambiance'], $data['cleanliness'], $data['quality'], $data['service']);
@@ -65,12 +70,19 @@ try {
     $restaurant_id = intval($data['restaurant_id']);
     $text = $data['text'];
     $author = $data['author'];
+    $facture_code = strtoupper(trim($data['facture_code']));
+
+    $duplicateStmt = $cnx->prepare("SELECT id FROM reviews WHERE restaurant_id = ? AND facture_code = ? LIMIT 1");
+    $duplicateStmt->execute([$restaurant_id, $facture_code]);
+    if ($duplicateStmt->fetch()) {
+        sendError('This facture code has already been used for this restaurant', 409);
+    }
     
     // Get user_id from session if logged in
     $user_id = (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) ? $_SESSION['user_id'] : null;
 
     // Create review
-    $result = Review::create($restaurant_id, $author, $rating, $text, $ambiance, $cleanliness, $quality, $service, $user_id);
+    $result = Review::create($restaurant_id, $author, $rating, $text, $facture_code, $ambiance, $cleanliness, $quality, $service, $user_id);
 
     if ($result) {
         sendSuccess(['message' => 'Review created successfully'], 'Review created successfully', 201);
@@ -83,3 +95,7 @@ try {
     sendError($e->getMessage(), 500);
 }
 ?>
+
+
+
+

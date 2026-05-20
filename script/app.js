@@ -38,6 +38,261 @@ function avgRating(r) {
   return r.reviews.reduce((a, rv) => a + getReviewAverage(rv), 0) / r.reviews.length;
 }
 
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function tokenizeSearch(value) {
+  return normalizeSearchText(value)
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(/\s+/)
+    .filter(term => term.length > 1)
+    .filter(term => !['the', 'and', 'for', 'with', 'near', 'best', 'restaurant', 'restaurants'].includes(term));
+}
+
+function buildRestaurantSearchText(r) {
+  return normalizeSearchText([
+    r.name,
+    r.cuisine,
+    r.category,
+    r.city,
+    r.region,
+    r.address,
+    r.description,
+    getRestaurantReviewText(r),
+    getRestaurantCommentText(r),
+    Array.isArray(r.tags) ? r.tags.join(' ') : r.tags
+  ].filter(Boolean).join(' '));
+}
+
+function restaurantImageAttrs(r, attrs = '') {
+  const src = r?.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80';
+  const alt = `alt="${String(r?.name || 'Restaurant')} image"`;
+  return `src="${src}" ${alt} ${attrs}`.trim();
+}
+
+function uniqueSearchTerms(values) {
+  return [...new Set(values.flatMap(value => tokenizeSearch(value)))];
+}
+
+function getRestaurantReviewText(r) {
+  return (r.reviews || [])
+    .map(rv => [rv.author, rv.text].filter(Boolean).join(' '))
+    .join(' ');
+}
+
+function getRestaurantCommentText(r) {
+  return (r.reviews || [])
+    .flatMap(rv => rv.comments || [])
+    .map(comment => [comment.author, comment.text].filter(Boolean).join(' '))
+    .join(' ');
+}
+
+function buildRestaurantSearchProfile(r) {
+  const tags = Array.isArray(r.tags) ? r.tags : String(r.tags || '').split(',');
+  const profile = {
+    name: uniqueSearchTerms([r.name]),
+    cuisine: uniqueSearchTerms([r.cuisine, r.category]),
+    location: uniqueSearchTerms([r.city, r.region, r.address]),
+    tags: uniqueSearchTerms(tags),
+    description: uniqueSearchTerms([r.description]),
+    reviews: uniqueSearchTerms([getRestaurantReviewText(r)]),
+    comments: uniqueSearchTerms([getRestaurantCommentText(r)])
+  };
+  profile.all = [...new Set(Object.values(profile).flat())];
+  return profile;
+}
+
+function addRestaurantEdge(graph, fromId, toId, reason) {
+  if (fromId === toId) return;
+  graph[fromId] ??= {};
+  graph[fromId][toId] ??= new Set();
+  graph[fromId][toId].add(reason);
+}
+
+function buildRestaurantSearchGraph(restaurants) {
+  const graph = {};
+  const buckets = new Map();
+  const addBucket = (kind, value, restaurantId) => {
+    const normalizedValue = normalizeSearchText(value).trim();
+    if (!normalizedValue) return;
+    const key = `${kind}:${normalizedValue}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(restaurantId);
+  };
+
+  restaurants.forEach(r => {
+    addBucket('category', r.category, r.id);
+    addBucket('cuisine', r.cuisine, r.id);
+    addBucket('city', r.city, r.id);
+    addBucket('region', r.region, r.id);
+    (Array.isArray(r.tags) ? r.tags : []).forEach(tag => addBucket('tag', tag, r.id));
+  });
+
+  buckets.forEach((ids, key) => {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length < 2) return;
+    const [kind, rawValue] = key.split(':');
+    const reason = `${kind} match: ${rawValue}`;
+    for (let i = 0; i < uniqueIds.length; i++) {
+      for (let j = i + 1; j < uniqueIds.length; j++) {
+        addRestaurantEdge(graph, uniqueIds[i], uniqueIds[j], reason);
+        addRestaurantEdge(graph, uniqueIds[j], uniqueIds[i], reason);
+      }
+    }
+  });
+
+  return graph;
+}
+
+function termMatchesProfile(term, profileTerms) {
+  return profileTerms.some(candidate =>
+    candidate === term ||
+    candidate.startsWith(term) ||
+    term.startsWith(candidate) ||
+    (term.length >= 4 && candidate.includes(term))
+  );
+}
+
+function getMatchedSearchTerms(profile, terms) {
+  return terms.filter(term => termMatchesProfile(term, profile.all || []));
+}
+
+function getRestaurantSearchMatchReasons(r, terms) {
+  const profile = r.searchProfile || buildRestaurantSearchProfile(r);
+  const labels = [
+    ['name', 'Name match'],
+    ['cuisine', 'Cuisine match'],
+    ['tags', 'Tag match'],
+    ['location', 'Location match'],
+    ['reviews', 'Review match'],
+    ['comments', 'Comment match'],
+    ['description', 'Description match']
+  ];
+
+  return labels
+    .filter(([field]) => terms.some(term => termMatchesProfile(term, profile[field] || [])))
+    .map(([, label]) => label);
+}
+
+function edgeReasonsMatchTerms(reasons, terms) {
+  return reasons.some(reason => {
+    const reasonTerms = tokenizeSearch(reason);
+    return terms.some(term => termMatchesProfile(term, reasonTerms));
+  });
+}
+
+function getDirectRestaurantSearchScore(r, terms) {
+  if (!terms.length) return 0;
+  const profile = r.searchProfile || buildRestaurantSearchProfile(r);
+  const weights = { name: 55, cuisine: 34, tags: 26, location: 18, reviews: 16, comments: 12, description: 10 };
+  let score = 0;
+  let matchedTerms = 0;
+
+  terms.forEach(term => {
+    let termScore = 0;
+    Object.entries(weights).forEach(([field, weight]) => {
+      if (termMatchesProfile(term, profile[field] || [])) {
+        termScore = Math.max(termScore, weight);
+      }
+    });
+    if (termScore > 0) {
+      matchedTerms += 1;
+      score += termScore;
+    }
+  });
+
+  if (matchedTerms === 0) return 0;
+  const coverage = matchedTerms / terms.length;
+  return Math.round(score * coverage + (r.avg || 0) * 4 + Math.min((r.reviews || []).length, 20));
+}
+
+function bfsRelatedRestaurants(seedIds, restaurantsById, graph, directScores, terms, limit = 20) {
+  const queue = seedIds.map(id => [id, 0, directScores.get(id) || 1]);
+  const visited = new Set(seedIds);
+  const related = [];
+
+  while (queue.length && related.length < limit) {
+    const [currentId, distance, seedScore] = queue.shift();
+    const neighbors = Object.keys(graph[currentId] || {}).sort((a, b) => {
+      const restaurantA = restaurantsById.get(Number(a));
+      const restaurantB = restaurantsById.get(Number(b));
+      return (restaurantB?.score || 0) - (restaurantA?.score || 0);
+    });
+
+    neighbors.forEach(neighborKey => {
+      const neighborId = Number(neighborKey);
+      if (visited.has(neighborId) || !restaurantsById.has(neighborId)) return;
+
+      const restaurant = restaurantsById.get(neighborId);
+      const reasons = [...(graph[currentId]?.[neighborId] || [])];
+      const profile = restaurant.searchProfile || buildRestaurantSearchProfile(restaurant);
+      const matchedTerms = getMatchedSearchTerms(profile, terms);
+      const followsQueryEdge = edgeReasonsMatchTerms(reasons, terms);
+
+      if (!followsQueryEdge && matchedTerms.length === 0) return;
+
+      visited.add(neighborId);
+      queue.push([neighborId, distance + 1, seedScore]);
+
+      const coverageBoost = Math.max(matchedTerms.length / terms.length, followsQueryEdge ? 0.75 : 0.5);
+      related.push({
+        ...restaurant,
+        queryScore: Math.max(1, Math.round((seedScore * coverageBoost) / (distance + 2))),
+        searchDistance: distance + 1,
+        linkedFrom: currentId,
+        matchReasons: [...new Set([...getRestaurantSearchMatchReasons(restaurant, terms), ...reasons])].slice(0, 3)
+      });
+    });
+  }
+
+  return related;
+}
+
+function searchRestaurants(restaurants, query) {
+  const terms = tokenizeSearch(query);
+  if (!terms.length) {
+    return restaurants.map(r => ({ ...r, queryScore: r.score || 0, searchDistance: 0, matchReasons: [] }));
+  }
+
+  const restaurantsById = new Map(restaurants.map(r => [Number(r.id), r]));
+  const graph = state.restaurantSearchGraph || buildRestaurantSearchGraph(restaurants);
+  const directScores = new Map();
+  const directMatches = restaurants
+    .map(r => {
+      const queryScore = getDirectRestaurantSearchScore(r, terms);
+      if (queryScore > 0) directScores.set(Number(r.id), queryScore);
+      return { ...r, queryScore, searchDistance: 0, matchReasons: getRestaurantSearchMatchReasons(r, terms).slice(0, 3) };
+    })
+    .filter(r => r.queryScore > 0)
+    .sort((a, b) => b.queryScore - a.queryScore);
+
+  const related = bfsRelatedRestaurants(
+    directMatches.slice(0, 6).map(r => Number(r.id)),
+    restaurantsById,
+    graph,
+    directScores,
+    terms
+  );
+
+  const merged = new Map();
+  [...directMatches, ...related].forEach(r => {
+    const previous = merged.get(Number(r.id));
+    if (!previous || r.queryScore > previous.queryScore) {
+      merged.set(Number(r.id), r);
+    }
+  });
+
+  return [...merged.values()].sort((a, b) =>
+    b.queryScore - a.queryScore ||
+    (a.searchDistance || 0) - (b.searchDistance || 0) ||
+    (b.score || 0) - (a.score || 0)
+  );
+}
+
 // ===== STATE =====
 const state = {
   restaurants: [],
@@ -49,9 +304,11 @@ const state = {
     quality: 0,
     service: 0
   },
+  restaurantSearchGraph: {},
   favorites: [],   // array of restaurant IDs
   wishlist: []     // array of restaurant IDs
 };
+window.state = state;
 
 const THEME_STORAGE_KEY = 'appetitus_theme';
 function getStoredTheme() {
@@ -81,10 +338,30 @@ async function loadRestaurants() {
       const myReviews = state.userReviews.filter(ur => ur.restaurantId === r.id);
       const allReviews = [...myReviews, ...(r.reviews || [])];
       return { ...r, reviews: allReviews, score: 0, avg: 0 };
-    }).map(r => ({ ...r, score: calcScore(r), avg: avgRating(r) }));
+    }).map(r => {
+      const enriched = { ...r, score: calcScore(r), avg: avgRating(r) };
+      return {
+        ...enriched,
+        searchText: buildRestaurantSearchText(enriched),
+        searchProfile: buildRestaurantSearchProfile(enriched)
+      };
+    });
+    state.restaurantSearchGraph = buildRestaurantSearchGraph(state.restaurants);
 
-    if (typeof window.initExplore === 'function') window.initExplore();
-    else if (typeof renderGrid === 'function') renderGrid();
+    let pageRenderHandled = false;
+    if (typeof window.initExplore === 'function') {
+      window.initExplore();
+      pageRenderHandled = true;
+    }
+    if (typeof window.initRankings === 'function') {
+      window.initRankings();
+      pageRenderHandled = true;
+    }
+    if (typeof window.initRate === 'function') {
+      window.initRate();
+      pageRenderHandled = true;
+    }
+    if (!pageRenderHandled && typeof renderGrid === 'function') renderGrid();
     if (typeof renderTopPicks === 'function') renderTopPicks();
     if (typeof renderBadgesShowcase === 'function') renderBadgesShowcase();
   } catch (err) {
@@ -216,6 +493,39 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-US', { day:'2-digit', month:'long', year:'numeric' });
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
+
+function renderReviewComments(comments = []) {
+  if (!comments.length) {
+    return '<div class="comment-empty">No comments yet</div>';
+  }
+
+  return `
+    <div class="comment-thread">
+      ${comments.map(comment => `
+        <div class="comment-item">
+          <div class="comment-avatar">${escapeHtml(String(comment.author || 'C').charAt(0).toUpperCase())}</div>
+          <div class="comment-main">
+            <div class="comment-meta">
+              <span class="comment-author">${escapeHtml(comment.author || 'Community')}</span>
+              <span>${comment.created_at ? fmtDate(comment.created_at) : ''}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(comment.text || '')}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 // ===== TOAST =====
 function toast(msg, type = 'success') {
   const t = document.getElementById('toast');
@@ -246,7 +556,7 @@ function openCasserole(id) {
 
   panelContent.innerHTML = `
     <div class="casserole-hero" data-category="${r.category}">
-      <img src="${r.image}" alt="${r.name}" />
+      <img ${restaurantImageAttrs(r)} />
       <div class="casserole-hero-overlay"></div>
       <span class="casserole-hero-badge">🍽️ ${r.cuisine}</span>
       <div class="casserole-hero-actions">
@@ -281,16 +591,21 @@ function openCasserole(id) {
       <div class="reviews-list">${r.reviews.map(rv=>`
         <div class="review-card">
           <div class="review-header">
-            <div class="review-avatar">${rv.author.charAt(0)}</div>
+            <div class="review-avatar">${escapeHtml(String(rv.author || 'R').charAt(0).toUpperCase())}</div>
             <div>
-              <div class="review-author">${rv.author}</div>
+              <div class="review-author">${escapeHtml(rv.author || 'Reviewer')}</div>
               <div class="stars">${renderStars(getReviewAverage(rv))}</div>
             </div>
             <div class="review-date">${fmtDate(rv.date)}</div>
           </div>
-          <div class="review-text">${rv.text}</div>
+          <div class="review-text">${escapeHtml(rv.text || '')}</div>
           <div class="review-detail" style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
             Ambiance ${rv.ambiance || rv.rating} · Cleanliness ${rv.cleanliness || rv.rating} · Quality ${rv.quality || rv.rating} · Service ${rv.service || rv.rating}
+            ${rv.facture_verified ? ' · Facture verified' : ''}
+          </div>
+          <div class="comment-block">
+            <div class="comment-block-title">Comments (${(rv.comments || []).length})</div>
+            ${renderReviewComments(rv.comments || [])}
           </div>
         </div>`).join('')}
       </div>
@@ -322,6 +637,10 @@ function openCasserole(id) {
         <div class="form-group">
           <label class="form-label">Overall</label>
           <div id="review-rating-summary" style="font-weight:600;color:var(--text-secondary);">Choose your scores above.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Facture code</label>
+          <input class="form-input" id="rv-facture-code" placeholder="Code on your receipt..." maxlength="100" autocomplete="off" />
         </div>
         <div class="form-group">
           <label class="form-label">Comment</label>
@@ -376,10 +695,12 @@ function setRating(category, v) {
 
 async function submitReview(restaurantId) {
   const author = document.getElementById('rv-author')?.value.trim();
+  const factureCode = document.getElementById('rv-facture-code')?.value.trim();
   const text   = document.getElementById('rv-text')?.value.trim();
   const ratings = state.pendingRatings;
   const missing = Object.entries(ratings).filter(([_, value]) => value === 0);
   if (!author) { toast('⚠️ Enter your name.', 'error'); return; }
+  if (!factureCode || factureCode.length < 4) { toast('⚠️ Enter the facture code from your receipt.', 'error'); return; }
   if (missing.length) { toast('⚠️ Choose a rating for ambiance, cleanliness, quality and service.', 'error'); return; }
   if (text.length < 20) { toast('⚠️ Comment too short (min. 20 characters).', 'error'); return; }
 
@@ -396,6 +717,7 @@ async function submitReview(restaurantId) {
         cleanliness: ratings.cleanliness,
         quality: ratings.quality,
         service: ratings.service,
+        facture_code: factureCode,
         text: text
       })
     });
@@ -420,6 +742,7 @@ async function submitReview(restaurantId) {
     cleanliness: ratings.cleanliness,
     quality: ratings.quality,
     service: ratings.service,
+    facture_verified: true,
     text,
     date: new Date().toISOString().split('T')[0]
   };
@@ -460,12 +783,8 @@ function updateNavUser() {
   const themeButton = `
       <button id="theme-toggle" class="btn btn-outline theme-toggle" type="button" onclick="toggleTheme()">🌙 Dark</button>`;
   if (u) {
-    const badge = getBadge(u.reviewCount || 0);
     actionsEl.innerHTML = `${themeButton}
-      <a href="favorites.php" class="nav-icon-link" title="My Favorites">❤️</a>
-      <a href="wishlist.php" class="nav-icon-link" title="My Wishlist">🔖</a>
-      <a href="profile.php" class="badge ${badge.class}" style="text-decoration:none;">${badge.icon} ${badge.name}</a>
-      <a href="profile.php" class="btn btn-ghost">👤 ${u.name}</a>
+      <a href="profile.php" class="btn btn-ghost">${u.name}</a>
       <button class="btn btn-outline" onclick="logout()">Log Out</button>`;
   } else {
     actionsEl.innerHTML = `${themeButton}
